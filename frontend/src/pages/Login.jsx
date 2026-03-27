@@ -101,10 +101,11 @@ const Login = () => {
       admin:   { email: 'admin@smartcare.ie',        password: 'AdminPass123!' },
     };
     setEmail(creds[demoRole].email);
-    setPassword(creds[demoRole].password);
-    setError('');
-  };
-}
+setPassword(creds[demoRole].password);
+setError('');
+};       // ← closes the creds block
+     };       // ← ADD THIS LINE to close prefillDemo function
+}        // ← closes Login component
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100
       relative overflow-hidden px-4">
