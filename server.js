@@ -74,6 +74,53 @@ app.use((err, _req, res, _next) => {
   });
 });
 
+// SEED ROUTE — protected by secret key, remove after use
+app.get('/api/seed/:key', async (req, res) => {
+  if (req.params.key !== 'smartcare2026') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  try {
+    const User = require('./models/User');
+    const Doctor = require('./models/Doctor');
+    const Appointment = require('./models/Appointment');
+    const MedicalReport = require('./models/MedicalReport');
+
+    await User.deleteMany({});
+    await Doctor.deleteMany({});
+    await Appointment.deleteMany({});
+    await MedicalReport.deleteMany({});
+
+    const doctors = await Doctor.insertMany([
+      { name: "Michael O'Brien", email: 'm.obrien@smartcare.ie', specialty: 'General Practice', fee: 65, experience: '12 years', available: true },
+      { name: 'Anna Walsh',       email: 'a.walsh@smartcare.ie',  specialty: 'Cardiology',       fee: 90, experience: '8 years',  available: true },
+      { name: 'Patricia Nolan',   email: 'p.nolan@smartcare.ie',  specialty: 'Pediatrics',       fee: 55, experience: '15 years', available: true },
+      { name: 'James Connell',    email: 'j.connell@smartcare.ie',specialty: 'Neurology',        fee: 110,experience: '10 years', available: true },
+    ]);
+
+    const patient = new User({ name: 'Sarah Murphy', email: 'sarah.murphy@gmail.com', password: 'SecurePass123!', role: 'patient', blood_type: 'A+', allergies: 'Penicillin', is_active: true });
+    await patient.save();
+    const admin = new User({ name: 'Admin User', email: 'admin@smartcare.ie', password: 'AdminPass123!', role: 'admin', is_active: true });
+    await admin.save();
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    await Appointment.insertMany([
+      { patient: patient._id, doctor: doctors[0]._id, date: tomorrow.toISOString().split('T')[0], time: '10:30', type: 'Video Call', fee: 65, status: 'Upcoming', notes: 'Recurring headaches' },
+      { patient: patient._id, doctor: doctors[1]._id, date: tomorrow.toISOString().split('T')[0], time: '14:00', type: 'In-Person',  fee: 90, status: 'Upcoming', notes: 'Cardiac checkup' },
+    ]);
+
+    await MedicalReport.insertMany([
+      { patient: patient._id, doctor: doctors[0]._id, title: 'Blood_Test_Jan2026.pdf', report_type: 'Blood Test', file_size: '1.2 MB', file_url: '#' },
+      { patient: patient._id, doctor: doctors[1]._id, title: 'ECG_Report_Dec2025.pdf', report_type: 'ECG',        file_size: '0.9 MB', file_url: '#' },
+    ]);
+
+    res.json({ success: true, message: '✅ Database seeded!', doctors: doctors.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+```
 // ── START ─────────────────────────────────────────────────
 async function startServer() {
   try {
