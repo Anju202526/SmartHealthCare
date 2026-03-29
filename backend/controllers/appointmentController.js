@@ -1,39 +1,26 @@
-const { getPool, sql } = require('../config/database');
+const Appointment = require('../models/Appointment');
+const User = require('../models/User');
+const Doctor = require('../models/Doctor');
 
 // GET /api/appointments/patient — all appointments for logged-in patient
 async function getPatientAppointments(req, res) {
-  const pool = getPool();
   try {
-    const patientResult = await pool
-      .request()
-      .input('user_id', sql.Int, req.user.user_id)
-      .query('SELECT patient_id FROM Patients WHERE user_id = @user_id');
+    const appointments = await Appointment.find({ patient: req.user.userId })
+      .populate('doctor', 'name specialty')
+      .sort({ date: -1 });
 
-    if (patientResult.recordset.length === 0) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
+    const formatted = appointments.map(a => ({
+      id:       a._id,
+      doctor:   `Dr. ${a.doctor?.name || 'Unknown'}`,
+      specialty: a.doctor?.specialty || '',
+      date:     a.date,
+      time:     a.time,
+      type:     a.type,
+      status:   a.status,
+      fee:      `€${a.fee}`,
+    }));
 
-    const patientId = patientResult.recordset[0].patient_id;
-
-    const result = await pool
-      .request()
-      .input('patient_id', sql.Int, patientId)
-      .query(`
-        SELECT a.appointment_id AS id,
-               CONCAT('Dr. ', d.first_name, ' ', d.last_name) AS doctor,
-               d.specialty,
-               CONVERT(VARCHAR(12), a.appointment_date, 106) AS date,
-               CONVERT(VARCHAR(5),  a.appointment_time, 108)  AS time,
-               a.consultation_type AS type,
-               a.status,
-               CONCAT('€', CAST(a.fee AS VARCHAR)) AS fee
-        FROM Appointments a
-        JOIN Doctors d ON a.doctor_id = d.doctor_id
-        WHERE a.patient_id = @patient_id
-        ORDER BY a.appointment_date DESC, a.appointment_time DESC
-      `);
-
-    res.json(result.recordset);
+    res.json(formatted);
   } catch (err) {
     console.error('getPatientAppointments error:', err);
     res.status(500).json({ error: 'Failed to load appointments', details: err.message });
@@ -42,41 +29,30 @@ async function getPatientAppointments(req, res) {
 
 // GET /api/appointments/upcoming — upcoming appointments for logged-in patient
 async function getUpcomingAppointments(req, res) {
-  const pool = getPool();
   try {
-    const patientResult = await pool
-      .request()
-      .input('user_id', sql.Int, req.user.user_id)
-      .query('SELECT patient_id FROM Patients WHERE user_id = @user_id');
+    const today = new Date().toISOString().split('T')[0];
 
-    if (patientResult.recordset.length === 0) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
+    const appointments = await Appointment.find({
+      patient: req.user.userId,
+      status:  { $in: ['Upcoming', 'Confirmed'] },
+      date:    { $gte: today },
+    })
+      .populate('doctor', 'name specialty')
+      .sort({ date: 1, time: 1 })
+      .limit(5);
 
-    const patientId = patientResult.recordset[0].patient_id;
+    const formatted = appointments.map(a => ({
+      id:       a._id,
+      doctor:   `Dr. ${a.doctor?.name || 'Unknown'}`,
+      specialty: a.doctor?.specialty || '',
+      date:     a.date,
+      time:     a.time,
+      type:     a.type,
+      status:   a.status,
+      fee:      `€${a.fee}`,
+    }));
 
-    const result = await pool
-      .request()
-      .input('patient_id', sql.Int, patientId)
-      .query(`
-        SELECT TOP 5
-               a.appointment_id AS id,
-               CONCAT('Dr. ', d.first_name, ' ', d.last_name) AS doctor,
-               d.specialty,
-               CONVERT(VARCHAR(12), a.appointment_date, 106) AS date,
-               CONVERT(VARCHAR(5),  a.appointment_time, 108)  AS time,
-               a.consultation_type AS type,
-               a.status,
-               CONCAT('€', CAST(a.fee AS VARCHAR)) AS fee
-        FROM Appointments a
-        JOIN Doctors d ON a.doctor_id = d.doctor_id
-        WHERE a.patient_id = @patient_id
-          AND a.status IN ('upcoming', 'confirmed')
-          AND a.appointment_date >= CAST(GETUTCDATE() AS DATE)
-        ORDER BY a.appointment_date, a.appointment_time
-      `);
-
-    res.json(result.recordset);
+    res.json(formatted);
   } catch (err) {
     console.error('getUpcomingAppointments error:', err);
     res.status(500).json({ error: 'Failed to load appointments', details: err.message });
@@ -85,71 +61,38 @@ async function getUpcomingAppointments(req, res) {
 
 // POST /api/appointments/book
 async function bookAppointment(req, res) {
-  const {
-    doctorId,
-    date,          // "YYYY-MM-DD"
-    time,          // "HH:MM"
-    consultationType,
-    notes,
-    fee,
-  } = req.body;
+  const { doctorId, date, time, consultationType, notes, fee } = req.body;
 
-  const pool = getPool();
   try {
-    const patientResult = await pool
-      .request()
-      .input('user_id', sql.Int, req.user.user_id)
-      .query('SELECT patient_id FROM Patients WHERE user_id = @user_id');
-
-    if (patientResult.recordset.length === 0) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
-
-    const patientId = patientResult.recordset[0].patient_id;
-
     // Check slot is still free
-    const conflict = await pool
-      .request()
-      .input('doctor_id', sql.Int, doctorId)
-      .input('date', sql.Date, date)
-      .input('time', sql.NVarChar, time)
-      .query(`
-        SELECT appointment_id
-        FROM Appointments
-        WHERE doctor_id = @doctor_id
-          AND appointment_date = @date
-          AND appointment_time = @time
-          AND status IN ('upcoming', 'confirmed')
-      `);
+    const conflict = await Appointment.findOne({
+      doctor: doctorId,
+      date,
+      time,
+      status: { $in: ['Upcoming', 'Confirmed'] },
+    });
 
-    if (conflict.recordset.length > 0) {
+    if (conflict) {
       return res.status(409).json({ error: 'This time slot is no longer available' });
     }
 
-    const result = await pool
-      .request()
-      .input('patient_id', sql.Int, patientId)
-      .input('doctor_id', sql.Int, doctorId)
-      .input('date', sql.Date, date)
-      .input('time', sql.NVarChar, time)
-      .input('consultation_type', sql.NVarChar, consultationType || 'Video Call')
-      .input('reason', sql.NVarChar, notes || null)
-      .input('fee', sql.Decimal(10, 2), fee || 0)
-      .input('status', sql.NVarChar, 'upcoming')
-      .query(`
-        INSERT INTO Appointments
-          (patient_id, doctor_id, appointment_date, appointment_time,
-           consultation_type, reason, fee, status, created_at, updated_at)
-        OUTPUT INSERTED.appointment_id
-        VALUES
-          (@patient_id, @doctor_id, @date, @time,
-           @consultation_type, @reason, @fee, @status, GETUTCDATE(), GETUTCDATE())
-      `);
+    const appointment = new Appointment({
+      patient: req.user.userId,
+      doctor:  doctorId,
+      date,
+      time,
+      type:    consultationType || 'Video Call',
+      notes:   notes || null,
+      fee:     fee || 0,
+      status:  'Upcoming',
+    });
+
+    await appointment.save();
 
     res.status(201).json({
       success: true,
       message: 'Appointment booked successfully',
-      appointmentId: result.recordset[0].appointment_id,
+      appointmentId: appointment._id,
     });
   } catch (err) {
     console.error('bookAppointment error:', err);
@@ -161,20 +104,12 @@ async function bookAppointment(req, res) {
 async function cancelAppointment(req, res) {
   const { id } = req.params;
   const { reason } = req.body;
-  const pool = getPool();
 
   try {
-    await pool
-      .request()
-      .input('appointment_id', sql.Int, id)
-      .input('cancel_reason', sql.NVarChar, reason || null)
-      .query(`
-        UPDATE Appointments
-        SET status = 'cancelled',
-            cancel_reason = @cancel_reason,
-            updated_at = GETUTCDATE()
-        WHERE appointment_id = @appointment_id
-      `);
+    await Appointment.findByIdAndUpdate(id, {
+      status:        'Cancelled',
+      cancel_reason: reason || null,
+    });
 
     res.json({ success: true, message: 'Appointment cancelled' });
   } catch (err) {
@@ -186,55 +121,40 @@ async function cancelAppointment(req, res) {
 // GET /api/appointments — admin: all appointments with optional filters
 async function getAllAppointments(req, res) {
   const { status, doctorId, patientId, dateFrom, dateTo, limit } = req.query;
-  const pool = getPool();
 
   try {
-    const topClause = limit ? `TOP ${parseInt(limit)}` : '';
-
-    let query = `
-      SELECT ${topClause}
-             a.appointment_id AS id,
-             CONCAT('APT-', RIGHT('0000' + CAST(a.appointment_id AS VARCHAR), 4)) AS appointment_code,
-             CONCAT(p.first_name, ' ', p.last_name) AS patient,
-             CONCAT('Dr. ', d.first_name, ' ', d.last_name) AS doctor,
-             CONVERT(VARCHAR(12), a.appointment_date, 106) AS date,
-             CONVERT(VARCHAR(5),  a.appointment_time, 108)  AS time,
-             a.consultation_type AS type,
-             a.status,
-             CONCAT('€', CAST(a.fee AS VARCHAR)) AS fee
-      FROM Appointments a
-      JOIN Patients p ON a.patient_id = p.patient_id
-      JOIN Doctors  d ON a.doctor_id  = d.doctor_id
-      WHERE 1=1
-    `;
-
-    const request = pool.request();
-
-    if (status) {
-      query += ' AND a.status = @status';
-      request.input('status', sql.NVarChar, status);
-    }
-    if (doctorId) {
-      query += ' AND a.doctor_id = @doctorId';
-      request.input('doctorId', sql.Int, doctorId);
-    }
-    if (patientId) {
-      query += ' AND a.patient_id = @patientId';
-      request.input('patientId', sql.Int, patientId);
-    }
-    if (dateFrom) {
-      query += ' AND a.appointment_date >= @dateFrom';
-      request.input('dateFrom', sql.Date, dateFrom);
-    }
-    if (dateTo) {
-      query += ' AND a.appointment_date <= @dateTo';
-      request.input('dateTo', sql.Date, dateTo);
+    const filter = {};
+    if (status)    filter.status  = status;
+    if (doctorId)  filter.doctor  = doctorId;
+    if (patientId) filter.patient = patientId;
+    if (dateFrom || dateTo) {
+      filter.date = {};
+      if (dateFrom) filter.date.$gte = dateFrom;
+      if (dateTo)   filter.date.$lte = dateTo;
     }
 
-    query += ' ORDER BY a.appointment_date DESC, a.appointment_time DESC';
+    const query = Appointment.find(filter)
+      .populate('patient', 'name email')
+      .populate('doctor',  'name specialty')
+      .sort({ date: -1, time: -1 });
 
-    const result = await request.query(query);
-    res.json(result.recordset);
+    if (limit) query.limit(parseInt(limit));
+
+    const appointments = await query;
+
+    const formatted = appointments.map((a, i) => ({
+      id:               a._id,
+      appointment_code: `APT-${String(i + 1001).padStart(4, '0')}`,
+      patient:          a.patient?.name || 'Unknown',
+      doctor:           `Dr. ${a.doctor?.name || 'Unknown'}`,
+      date:             a.date,
+      time:             a.time,
+      type:             a.type,
+      status:           a.status,
+      fee:              `€${a.fee}`,
+    }));
+
+    res.json(formatted);
   } catch (err) {
     console.error('getAllAppointments error:', err);
     res.status(500).json({ error: 'Failed to load appointments', details: err.message });
@@ -244,28 +164,28 @@ async function getAllAppointments(req, res) {
 // GET /api/appointments/:id — appointment detail
 async function getAppointmentDetails(req, res) {
   const { id } = req.params;
-  const pool = getPool();
 
   try {
-    const result = await pool
-      .request()
-      .input('appointment_id', sql.Int, id)
-      .query(`
-        SELECT a.*,
-               CONCAT(p.first_name, ' ', p.last_name) AS patient_name,
-               CONCAT('Dr. ', d.first_name, ' ', d.last_name) AS doctor_name,
-               d.specialty
-        FROM Appointments a
-        JOIN Patients p ON a.patient_id = p.patient_id
-        JOIN Doctors  d ON a.doctor_id  = d.doctor_id
-        WHERE a.appointment_id = @appointment_id
-      `);
+    const appointment = await Appointment.findById(id)
+      .populate('patient', 'name email phone')
+      .populate('doctor',  'name specialty');
 
-    if (result.recordset.length === 0) {
+    if (!appointment) {
       return res.status(404).json({ error: 'Appointment not found' });
     }
 
-    res.json(result.recordset[0]);
+    res.json({
+      id:           appointment._id,
+      patient_name: appointment.patient?.name || 'Unknown',
+      doctor_name:  `Dr. ${appointment.doctor?.name || 'Unknown'}`,
+      specialty:    appointment.doctor?.specialty || '',
+      date:         appointment.date,
+      time:         appointment.time,
+      type:         appointment.type,
+      status:       appointment.status,
+      notes:        appointment.notes,
+      fee:          appointment.fee,
+    });
   } catch (err) {
     console.error('getAppointmentDetails error:', err);
     res.status(500).json({ error: 'Failed to load appointment', details: err.message });
