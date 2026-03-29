@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartCare — Healthcare Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --white:#ffffff;--off:#f9f9f8;--grey-100:#f2f2f0;--grey-200:#e4e4e0;
+  --grey-300:#c8c8c4;--grey-400:#9c9c98;--grey-500:#6b6b67;
+  --grey-600:#4a4a46;--grey-700:#2e2e2a;--grey-800:#1a1a18;
+  --ink:#111110;--teal:#0a7c72;--teal-l:#e6f5f3;--teal-m:#b3e0db;
+  --sage:#4a7c59;--sage-l:#edf5ef;--azure:#0066cc;--azure-l:#e8f2fd;
+  --red:#c0392b;--red-l:#fdf2f2;--amber:#b45309;--amber-l:#fef8e8;
+  --green:#15803d;--green-l:#f0fdf4;
+  --sh1:0 1px 4px rgba(0,0,0,.06);--sh2:0 4px 20px rgba(0,0,0,.08);
+  --sh3:0 12px 48px rgba(0,0,0,.12);--r:12px;--r2:18px;--r3:24px;
+  --bg:var(--off);--surface:var(--white);--border:var(--grey-200);--text:var(--ink);--text-muted:var(--grey-500);
+}
+body.dark{
+  --off:#0f0f0e;--white:#1a1a18;--grey-100:#242422;--grey-200:#2e2e2a;
+  --grey-300:#3a3a36;--grey-400:#666662;--grey-500:#8a8a86;
+  --grey-600:#b0b0aa;--grey-700:#d0d0ca;--grey-800:#e8e8e2;
+  --ink:#f0f0ea;--teal-l:#0a2e2b;--sage-l:#0f1f14;--azure-l:#0a1a2e;
+  --red-l:#2e0f0d;--amber-l:#2e1e06;--green-l:#0a1f10;
+  --sh1:0 1px 4px rgba(0,0,0,.3);--sh2:0 4px 20px rgba(0,0,0,.4);--sh3:0 12px 48px rgba(0,0,0,.5);
+}
+body{font-family:'Figtree',sans-serif;background:var(--off);color:var(--ink);min-height:100vh;transition:background .3s,color .3s}
+
+/* ── SCREEN SYSTEM ── */
+.page{display:none;min-height:100vh;animation:fadeIn .25s ease}
+.page.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SHARED COMPONENTS ── */
+.btn{padding:10px 20px;border-radius:var(--r);border:none;font-family:'Figtree',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.btn-ink{background:var(--ink);color:var(--white)}
+.btn-ink:hover{opacity:.85;transform:translateY(-1px);box-shadow:var(--sh2)}
+.btn-outline{background:var(--white);color:var(--grey-700);border:1.5px solid var(--grey-200)}
+.btn-outline:hover{border-color:var(--grey-400);background:var(--grey-100)}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-teal:hover{opacity:.9;transform:translateY(-1px)}
+.btn-red{background:var(--red-l);color:var(--red);border:1px solid #f5c6c6}
+.btn-red:hover{background:#fce8e8}
+.btn-ghost{background:transparent;color:var(--grey-500);border:none}
+.btn-ghost:hover{color:var(--ink)}
+.btn-sm{padding:7px 14px;font-size:12px;border-radius:9px}
+.btn-full{width:100%;justify-content:center}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.pill-green{background:var(--green-l);color:var(--green)}
+.pill-teal{background:var(--teal-l);color:var(--teal)}
+.pill-amber{background:var(--amber-l);color:var(--amber)}
+.pill-red{background:var(--red-l);color:var(--red)}
+.pill-grey{background:var(--grey-100);color:var(--grey-500)}
+.pill-blue{background:var(--azure-l);color:var(--azure)}
+.card{background:var(--white);border:1px solid var(--grey-200);border-radius:var(--r2);padding:22px;transition:background .3s,border-color .3s}
+.card-sm{background:var(--white);border:1px solid var(--grey-200);border-radius:var(--r);padding:16px;transition:background .3s,border-color .3s}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--grey-500);margin-bottom:7px}
+.form-input{width:100%;padding:11px 14px;border:1.5px solid var(--grey-200);border-radius:var(--r);font-family:'Figtree',sans-serif;font-size:14px;color:var(--ink);background:var(--white);outline:none;transition:border-color .15s,background .3s,color .3s}
+.form-input:focus{border-color:var(--teal)}
+.form-input::placeholder{color:var(--grey-400)}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239c9c98' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+textarea.form-input{resize:vertical;min-height:80px}
+.divider{height:1px;background:var(--grey-100);margin:16px 0}
+
+/* ── DARK MODE TOGGLE ── */
+.dark-toggle{width:40px;height:22px;border-radius:11px;background:var(--grey-200);border:none;cursor:pointer;position:relative;transition:background .3s;flex-shrink:0}
+.dark-toggle::after{content:'';width:16px;height:16px;border-radius:50%;background:var(--white);position:absolute;top:3px;left:3px;transition:transform .3s,background .3s;box-shadow:var(--sh1)}
+body.dark .dark-toggle{background:var(--teal)}
+body.dark .dark-toggle::after{transform:translateX(18px)}
+
+/* ── NOTIFICATION PANEL ── */
+.notif-panel{position:fixed;top:0;right:-360px;width:340px;height:100vh;background:var(--white);border-left:1px solid var(--grey-200);z-index:9998;transition:right .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;box-shadow:var(--sh3)}
+.notif-panel.open{right:0}
+.notif-overlay{position:fixed;inset:0;background:rgba(0,0,0,.2);z-index:9997;opacity:0;pointer-events:none;transition:opacity .3s}
+.notif-overlay.open{opacity:1;pointer-events:all}
+.notif-header{padding:20px;border-bottom:1px solid var(--grey-200);display:flex;align-items:center;justify-content:space-between}
+.notif-title{font-family:'Fraunces',serif;font-size:17px;font-weight:600}
+.notif-list{flex:1;overflow-y:auto;padding:12px}
+.notif-item{padding:14px;border-radius:var(--r);border:1px solid var(--grey-100);margin-bottom:8px;cursor:pointer;transition:all .15s;position:relative}
+.notif-item:hover{background:var(--off);border-color:var(--grey-200)}
+.notif-item.unread::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--teal);position:absolute;top:14px;right:14px}
+.notif-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;flex-shrink:0}
+.notif-text{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.notif-sub{font-size:11px;color:var(--grey-400)}
+.notif-time{font-size:10px;color:var(--grey-300);margin-top:5px;font-weight:600}
+
+/* ── SYMPTOM CHECKER ── */
+.symptom-checker{background:linear-gradient(135deg,var(--teal) 0%,#065f56 100%);border-radius:var(--r2);padding:22px;color:#fff;margin-bottom:18px}
+.sc-chips{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+.sc-chip{padding:6px 12px;border-radius:100px;font-size:12px;font-weight:600;background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);cursor:pointer;transition:all .15s}
+.sc-chip:hover,.sc-chip.active{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.5)}
+.sc-result{background:rgba(255,255,255,.12);border-radius:var(--r);padding:14px;margin-top:12px;font-size:13px;line-height:1.6;border:1px solid rgba(255,255,255,.2)}
+
+/* ── HEALTH CHART ── */
+.health-chart{width:100%;height:80px;margin-top:12px}
+.chart-bar-wrap{display:flex;align-items:flex-end;gap:4px;height:60px;padding:0 4px}
+.chart-bar{flex:1;border-radius:4px 4px 0 0;transition:height .5s cubic-bezier(.4,0,.2,1),opacity .15s;cursor:pointer;position:relative}
+.chart-bar:hover{opacity:.8}
+.chart-bar::after{content:attr(data-val);position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--grey-500);opacity:0;transition:opacity .15s;white-space:nowrap}
+.chart-bar:hover::after{opacity:1}
+.chart-labels{display:flex;justify-content:space-between;padding:4px 4px 0;margin-top:4px}
+.chart-label{font-size:9px;font-weight:600;color:var(--grey-400);text-align:center;flex:1}
+
+/* ── MINI LIVE STATS ── */
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite;margin-right:4px}
+
+/* ── AZURE BADGE ── */
+.azure-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;background:var(--azure-l);color:var(--azure);border:1px solid rgba(0,102,204,.15)}
+
+/* ══════════════════════════════
+   LOGIN PAGE
+══════════════════════════════ */
+#page-login{align-items:center;justify-content:center;background:var(--grey-100);position:relative;overflow:hidden;flex-direction:column}
+.login-bg{position:absolute;inset:0;background:linear-gradient(135deg,#0a7c72 0%,#0d6b61 30%,#1a2e2a 70%,#111110 100%);opacity:.07}
+.login-shapes{position:absolute;inset:0;overflow:hidden}
+.ls-circle{position:absolute;border-radius:50%;border:1px solid rgba(10,124,114,.15)}
+.ls-circle.c1{width:600px;height:600px;top:-200px;right:-200px}
+.ls-circle.c2{width:400px;height:400px;bottom:-150px;left:-100px}
+.ls-circle.c3{width:200px;height:200px;top:40%;left:10%}
+.login-card{background:var(--white);border:1px solid var(--grey-200);border-radius:var(--r3);padding:40px;width:440px;position:relative;z-index:2;box-shadow:var(--sh3)}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.login-logo-icon{width:36px;height:36px;background:var(--ink);border-radius:10px;display:flex;align-items:center;justify-content:center}
+.login-logo-name{font-family:'Fraunces',serif;font-size:22px;color:var(--ink);font-weight:600;letter-spacing:-.3px}
+.login-title{font-family:'Fraunces',serif;font-size:28px;color:var(--ink);font-weight:600;margin-bottom:6px;line-height:1.2}
+.login-sub{font-size:14px;color:var(--grey-400);margin-bottom:28px}
+.role-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px}
+.role-opt{padding:14px 8px;border-radius:var(--r);border:1.5px solid var(--grey-200);text-align:center;cursor:pointer;transition:all .15s;background:var(--white)}
+.role-opt:hover{border-color:var(--grey-400)}
+.role-opt.active{border-color:var(--ink);background:var(--ink)}
+.role-opt-icon{width:36px;height:36px;border-radius:10px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center}
+.role-opt p{font-size:12px;font-weight:700;color:var(--grey-600)}
+.role-opt.active p{color:var(--white)}
+.role-opt.active .role-opt-icon{background:rgba(255,255,255,.15)}
+.role-opt .role-opt-icon{background:var(--grey-100)}
+.azure-note{background:var(--azure-l);border:1px solid #bfdbfe;border-radius:var(--r);padding:10px 13px;font-size:12px;color:var(--azure);margin-bottom:16px;line-height:1.5;display:flex;gap:8px;align-items:flex-start}
+.login-footer{margin-top:20px;text-align:center;font-size:13px;color:var(--grey-400)}
+.login-footer a{color:var(--teal);font-weight:600;cursor:pointer;text-decoration:none}
+.demo-btns{display:flex;gap:8px;margin-top:12px}
+.demo-btn{flex:1;padding:8px;border-radius:9px;border:1.5px solid var(--grey-200);background:var(--off);font-size:11px;font-weight:600;color:var(--grey-600);cursor:pointer;transition:all .15s;text-align:center;font-family:'Figtree',sans-serif}
+.demo-btn:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-l)}
+
+/* ══════════════════════════════
+   SHELL
+══════════════════════════════ */
+.shell{display:flex;flex:1;width:100%}
+.sidebar{width:230px;flex-shrink:0;background:var(--ink);min-height:100vh;padding:24px 12px;display:flex;flex-direction:column;position:fixed;top:0;bottom:0;overflow-y:auto}
+.sidebar::-webkit-scrollbar{width:0}
+.sb-logo{display:flex;align-items:center;gap:10px;padding:0 8px;margin-bottom:32px}
+.sb-logo-icon{width:30px;height:30px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.sb-logo-name{font-family:'Fraunces',serif;font-size:18px;color:var(--white);font-weight:600}
+.sb-section{margin-bottom:24px}
+.sb-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.3);padding:0 8px;margin-bottom:6px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:all .15s;font-size:13px;font-weight:500;color:rgba(255,255,255,.55);border:none;background:none;width:100%;text-align:left;font-family:'Figtree',sans-serif}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.sb-item.active{background:rgba(255,255,255,.12);color:var(--white)}
+.sb-item svg{width:15px;height:15px;flex-shrink:0;opacity:.7}
+.sb-item.active svg{opacity:1}
+.sb-badge{margin-left:auto;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px;background:var(--teal);color:var(--white)}
+.sb-user{margin-top:auto;padding:12px 10px;border-top:1px solid rgba(255,255,255,.08)}
+.sb-user-av{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:15px;color:var(--white);flex-shrink:0}
+.sb-user-name{font-size:13px;font-weight:600;color:var(--white)}
+.sb-user-role{font-size:11px;color:rgba(255,255,255,.4)}
+.sb-logout{margin-top:8px;width:100%;padding:8px;border-radius:9px;background:rgba(255,255,255,.06);border:none;color:rgba(255,255,255,.5);font-size:12px;font-weight:600;cursor:pointer;font-family:'Figtree',sans-serif;transition:all .15s}
+.sb-logout:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
+.main-area{margin-left:230px;flex:1;display:flex;flex-direction:column}
+.topbar{height:56px;background:var(--white);border-bottom:1px solid var(--grey-200);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:100;transition:background .3s,border-color .3s}
+.topbar-title{font-family:'Fraunces',serif;font-size:18px;color:var(--ink);font-weight:600}
+.topbar-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.notif-btn{width:36px;height:36px;border-radius:10px;border:1.5px solid var(--grey-200);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:background .3s}
+.notif-dot{width:7px;height:7px;background:var(--red);border-radius:50%;position:absolute;top:7px;right:7px;border:1.5px solid var(--white)}
+.content{flex:1;padding:28px;overflow-y:auto}
+
+/* ══════════════════════════════
+   PATIENT DASHBOARD
+══════════════════════════════ */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--white);border:1px solid var(--grey-200);border-radius:var(--r2);padding:20px;cursor:pointer;transition:all .2s}
+.stat-card:hover{border-color:var(--grey-300);box-shadow:var(--sh2);transform:translateY(-2px)}
+.sc-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.sc-num{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--ink);line-height:1;margin-bottom:4px}
+.sc-lbl{font-size:12px;color:var(--grey-400);font-weight:500}
+.sc-src{font-size:10px;color:var(--azure);font-weight:600;margin-top:5px}
+.two-col{display:grid;grid-template-columns:1.7fr 1fr;gap:18px;margin-bottom:18px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:14px;font-weight:700;color:var(--ink)}
+.card-sub{font-size:11px;color:var(--grey-400);margin-top:2px}
+.appt-row{display:flex;align-items:center;gap:14px;padding:13px;border-radius:11px;border:1.5px solid var(--grey-100);background:var(--off);margin-bottom:8px;transition:all .15s;cursor:pointer}
+.appt-row:hover{border-color:var(--grey-200);background:var(--white)}
+.appt-av{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:17px;color:#fff;flex-shrink:0}
+.appt-name{font-size:13px;font-weight:700;color:var(--ink)}
+.appt-spec{font-size:11px;color:var(--grey-400)}
+.appt-meta{display:flex;gap:10px;margin-top:4px}
+.appt-mi{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--grey-500)}
+.appt-actions{margin-left:auto;display:flex;gap:6px}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric-item{padding:12px;background:var(--off);border-radius:10px;border:1px solid var(--grey-100)}
+.metric-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--grey-400);font-weight:700;margin-bottom:5px}
+.metric-val{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--ink);line-height:1}
+.metric-unit{font-size:11px;color:var(--grey-400);font-weight:400}
+.metric-status{font-size:10px;font-weight:600;color:var(--green);margin-top:3px}
+.doctor-item{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;cursor:pointer;transition:all .15s}
+.doctor-item:hover{background:var(--off)}
+.doctor-item:not(:last-child){border-bottom:1px solid var(--grey-100)}
+.di-name{font-size:13px;font-weight:600;color:var(--ink)}
+.di-spec{font-size:11px;color:var(--grey-400)}
+.di-avail{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:600}
+.avail-dot{width:6px;height:6px;border-radius:50%}
+.dot-green{background:var(--green)}
+.dot-amber{background:var(--amber)}
+
+/* ══════════════════════════════
+   DOCTOR DASHBOARD
+══════════════════════════════ */
+.schedule-row{display:flex;gap:14px;margin-bottom:24px;overflow-x:auto;padding-bottom:4px}
+.schedule-row::-webkit-scrollbar{display:none}
+.day-slot{flex-shrink:0;width:90px;background:var(--white);border:1.5px solid var(--grey-200);border-radius:var(--r);padding:12px 8px;text-align:center;cursor:pointer;transition:all .15s}
+.day-slot:hover{border-color:var(--grey-400)}
+.day-slot.active{background:var(--ink);border-color:var(--ink)}
+.day-slot.today::after{content:'';width:5px;height:5px;border-radius:50%;background:var(--teal);display:block;margin:4px auto 0}
+.day-slot.active.today::after{background:var(--white)}
+.ds-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grey-400);margin-bottom:4px}
+.ds-num{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--ink)}
+.day-slot.active .ds-name{color:rgba(255,255,255,.5)}
+.day-slot.active .ds-num{color:var(--white)}
+.ds-count{font-size:10px;font-weight:600;color:var(--teal);margin-top:3px}
+.day-slot.active .ds-count{color:var(--teal-m)}
+.patient-card{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--r);border:1.5px solid var(--grey-100);background:var(--off);margin-bottom:8px;transition:all .15s;cursor:pointer}
+.patient-card:hover{background:var(--white);border-color:var(--grey-200);box-shadow:var(--sh1)}
+.pc-time{font-size:12px;font-weight:700;color:var(--grey-500);width:56px;flex-shrink:0;text-align:center}
+.pc-line{width:1px;height:40px;background:var(--grey-200);flex-shrink:0}
+.pc-name{font-size:13px;font-weight:700;color:var(--ink)}
+.pc-reason{font-size:11px;color:var(--grey-400);margin-top:2px}
+.pc-actions{margin-left:auto;display:flex;gap:6px}
+.quick-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.qs-item{background:var(--white);border:1px solid var(--grey-200);border-radius:var(--r);padding:14px;text-align:center;transition:background .3s}
+.qs-num{font-family:'Fraunces',serif;font-size:24px;font-weight:600;color:var(--ink)}
+.qs-lbl{font-size:11px;color:var(--grey-400);font-weight:500;margin-top:2px}
+
+/* ══════════════════════════════
+   BOOKING INTERFACE
+══════════════════════════════ */
+.booking-shell{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:20px;align-items:start}
+.step-indicator{display:flex;align-items:center;gap:0;margin-bottom:28px}
+.step-item{display:flex;align-items:center;gap:8px;flex:1}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;transition:all .2s}
+.step-num.done{background:var(--teal);color:#fff}
+.step-num.active{background:var(--ink);color:#fff}
+.step-num.pending{background:var(--grey-100);color:var(--grey-400)}
+.step-lbl{font-size:12px;font-weight:600;color:var(--grey-500)}
+.step-lbl.active{color:var(--ink)}
+.step-lbl.done{color:var(--teal)}
+.step-line{height:1px;flex:1;background:var(--grey-200);margin:0 4px}
+.step-line.done{background:var(--teal)}
+.doc-select-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.doc-pick-card{padding:14px;border-radius:var(--r);border:1.5px solid var(--grey-200);cursor:pointer;transition:all .15s;background:var(--white)}
+.doc-pick-card:hover{border-color:var(--grey-400)}
+.doc-pick-card.selected{border-color:var(--ink);background:var(--off)}
+.dpc-name{font-size:13px;font-weight:700;color:var(--ink)}
+.dpc-spec{font-size:11px;color:var(--grey-400);margin:2px 0 6px}
+.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.time-chip{padding:10px 8px;border-radius:9px;text-align:center;border:1.5px solid var(--grey-200);font-size:12px;font-weight:600;color:var(--grey-600);cursor:pointer;transition:all .15s;background:var(--white)}
+.time-chip:hover{border-color:var(--grey-500)}
+.time-chip.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.time-chip.booked{background:var(--grey-100);color:var(--grey-300);cursor:not-allowed;border-style:dashed}
+.date-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px}
+.date-strip::-webkit-scrollbar{display:none}
+.date-chip{flex-shrink:0;width:60px;padding:10px 6px;border-radius:10px;text-align:center;border:1.5px solid var(--grey-200);cursor:pointer;transition:all .15s;background:var(--white)}
+.date-chip:hover{border-color:var(--grey-400)}
+.date-chip.active{background:var(--ink);border-color:var(--ink)}
+.dc-day{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--grey-400);margin-bottom:3px}
+.dc-num{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--ink)}
+.date-chip.active .dc-day{color:rgba(255,255,255,.5)}
+.date-chip.active .dc-num{color:#fff}
+.booking-summary{background:var(--ink);border-radius:var(--r2);padding:22px;color:#fff;position:sticky;top:80px}
+.bs-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:18px;color:#fff}
+.bs-row{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.bs-row:last-of-type{border-bottom:none}
+.bs-label{color:rgba(255,255,255,.5)}
+.bs-val{font-weight:600;color:#fff}
+.bs-total{font-family:'Fraunces',serif;font-size:22px;font-weight:600;color:#fff}
+.azure-strip{background:rgba(0,102,204,.2);border:1px solid rgba(0,102,204,.3);border-radius:9px;padding:10px;font-size:11px;color:#93c5fd;margin:14px 0;line-height:1.5}
+.success-card{text-align:center;padding:32px;display:none}
+.success-card.show{display:block}
+.success-icon{width:64px;height:64px;background:var(--green-l);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+
+/* ══════════════════════════════
+   ADMIN DASHBOARD
+══════════════════════════════ */
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--grey-400);padding:10px 14px;text-align:left;border-bottom:1px solid var(--grey-200);background:var(--grey-100)}
+.data-table td{padding:12px 14px;font-size:13px;color:var(--grey-700);border-bottom:1px solid var(--grey-100);vertical-align:middle}
+.data-table tr:hover td{background:var(--off)}
+.data-table tbody tr{cursor:pointer;transition:background .1s}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;display:flex;align-items:center;gap:8px;box-shadow:var(--sh3);max-width:320px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.t-green{border-left:3px solid var(--green)}
+.toast.t-teal{border-left:3px solid var(--teal)}
+.toast.t-red{border-left:3px solid var(--red)}
+
+/* ── PROGRESS BAR ── */
+.uptime-bar{height:6px;background:var(--grey-100);border-radius:100px;overflow:hidden;margin-top:6px}
+.uptime-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--teal),var(--green));transition:width 1s cubic-bezier(.4,0,.2,1)}
+
+/* ── ACTIVITY FEED ── */
+.activity-item{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--grey-100)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+
+/* ── SEARCH BAR ── */
+.search-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid var(--grey-200);border-radius:var(--r);background:var(--white);margin-bottom:16px;transition:border-color .15s}
+.search-bar:focus-within{border-color:var(--teal)}
+.search-bar input{border:none;outline:none;font-family:'Figtree',sans-serif;font-size:14px;color:var(--ink);background:transparent;flex:1}
+.search-bar input::placeholder{color:var(--grey-400)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){.sidebar{width:60px}.sb-logo-name,.sb-label,.sb-item span,.sb-user-name,.sb-user-role,.sb-logout{display:none}.main-area{margin-left:60px}}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-overlay" id="notifOverlay" onclick="closeNotif()"></div>
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-header">
+    <span class="notif-title">Notifications</span>
+    <button class="btn btn-ghost btn-sm" onclick="closeNotif()">✕ Close</button>
+  </div>
+  <div class="notif-list">
+    <div class="notif-item unread" onclick="showToast('Appointment reminder opened','t-teal');closeNotif()">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div class="notif-icon" style="background:var(--teal-l)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0a7c72" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div><div class="notif-text">Appointment tomorrow</div><div class="notif-sub">Dr. O'Brien · 10:30 AM · Video Call</div><div class="notif-time">2 hours ago</div></div>
+      </div>
+    </div>
+    <div class="notif-item unread" onclick="showToast('Report ready to download','t-teal');closeNotif()">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div class="notif-icon" style="background:var(--azure-l)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div>
+        <div><div class="notif-text">Blood test results ready</div><div class="notif-sub">Uploaded to Azure Blob Storage · 1.2MB</div><div class="notif-time">5 hours ago</div></div>
+      </div>
+    </div>
+    <div class="notif-item" onclick="showToast('Prescription details loaded','t-teal');closeNotif()">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div class="notif-icon" style="background:var(--green-l)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2"><path d="M19 9h-4V5a2 2 0 00-4 0v4H7a2 2 0 000 4h4v4a2 2 0 004 0v-4h4a2 2 0 000-4z"/></svg></div>
+        <div><div class="notif-text">Prescription renewed</div><div class="notif-sub">Dr. O'Brien approved refill · Azure SQL updated</div><div class="notif-time">Yesterday</div></div>
+      </div>
+    </div>
+    <div class="notif-item" onclick="showToast('Message from Dr. Walsh opened','t-teal');closeNotif()">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div class="notif-icon" style="background:var(--amber-l)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+        <div><div class="notif-text">Message from Dr. Walsh</div><div class="notif-sub">Please schedule a follow-up at your earliest...</div><div class="notif-time">2 days ago</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN PAGE -->
+<div class="page active" id="page-login">
+  <div class="login-bg"></div>
+  <div class="login-shapes"><div class="ls-circle c1"></div><div class="ls-circle c2"></div><div class="ls-circle c3"></div></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M19 9h-4V5a2 2 0 00-4 0v4H7a2 2 0 000 4h4v4a2 2 0 004 0v-4h4a2 2 0 000-4z"/></svg></div>
+      <span class="login-logo-name">SmartCare</span>
+    </div>
+    <h1 class="login-title">Sign in to<br>your account</h1>
+    <p class="login-sub">Select your role and enter your credentials</p>
+    <div class="role-grid" id="roleGrid">
+      <div class="role-opt active" onclick="selectRole(this,'patient')">
+        <div class="role-opt-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+        <p>Patient</p>
+      </div>
+      <div class="role-opt" onclick="selectRole(this,'doctor')">
+        <div class="role-opt-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M9 7h6M12 4v6M9 15h6"/></svg></div>
+        <p>Doctor</p>
+      </div>
+      <div class="role-opt" onclick="selectRole(this,'admin')">
+        <div class="role-opt-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.25C17.25 22.15 21 17.25 21 12V7l-9-5z"/></svg></div>
+        <p>Admin</p>
+      </div>
+    </div>
+    <div class="azure-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12.5 2L6 13h4.5L6 22l13-12h-5.5L18 2z" fill="#0066cc"/></svg>
+      <div><strong>Azure AD B2C Authentication</strong> — Secure role-based login. POST /auth/token · Azure Key Vault · JWT tokens · 1hr expiry</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" type="email" id="loginEmail" placeholder="you@example.com" value="sarah.murphy@gmail.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" value="SecurePass123!">
+    </div>
+    <button class="btn btn-ink btn-full" onclick="handleLogin()" id="loginBtn">Sign In with Azure AD →</button>
+    <div class="login-footer">
+      <div style="margin-top:12px;font-size:12px;color:var(--grey-300)">Quick demo logins:</div>
+      <div class="demo-btns">
+        <div class="demo-btn" onclick="demoLogin('patient')">👤 Patient</div>
+        <div class="demo-btn" onclick="demoLogin('doctor')">🩺 Doctor</div>
+        <div class="demo-btn" onclick="demoLogin('admin')">🛡 Admin</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT DASHBOARD -->
+<div class="page" id="page-patient">
+  <div class="shell">
+    <div class="sidebar" id="patient-sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M19 9h-4V5a2 2 0 00-4 0v4H7a2 2 0 000 4h4v4a2 2 0 004 0v-4h4a2 2 0 000-4z"/></svg></div>
+        <span class="sb-logo-name">SmartCare</span>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Menu</div>
+        <button class="sb-item active" onclick="patientTab('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Dashboard</span></button>
+        <button class="sb-item" onclick="patientTab('symptom',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><span>Symptom Checker</span><span class="sb-badge">AI</span></button>
+        <button class="sb-item" onclick="patientTab('book',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span>Book Appointment</span></button>
+        <button class="sb-item" onclick="patientTab('appointments',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>My Appointments</span><span class="sb-badge">3</span></button>
+        <button class="sb-item" onclick="patientTab('reports',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg><span>Medical Reports</span></button>
+        <button class="sb-item" onclick="patientTab('profile',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Profile</span></button>
+      </div>
+      <div class="sb-user">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="sb-user-av" style="background:var(--teal)">S</div>
+          <div><div class="sb-user-name">Sarah Murphy</div><div class="sb-user-role">Patient · SC-10482</div></div>
+        </div>
+        <button class="sb-logout" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+    <div class="main-area">
+      <div class="topbar">
+        <span class="topbar-title" id="patient-topbar-title">Dashboard</span>
+        <div class="topbar-right">
+          <span style="font-size:11px;color:var(--grey-400)"><span class="live-dot"></span>Live</span>
+          <button class="dark-toggle" id="darkToggle" onclick="toggleDark()" title="Toggle dark mode"></button>
+          <div class="notif-btn" onclick="openNotif()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-dot"></div></div>
+          <button class="btn btn-teal btn-sm" onclick="patientTab('book',document.querySelector('#patient-sidebar .sb-item:nth-child(3)'))">+ New Appointment</button>
+        </div>
+      </div>
+      <div class="content">
+
+        <!-- PATIENT: DASHBOARD TAB -->
+        <div id="pt-dashboard">
+          <div class="stats-row">
+            <div class="stat-card" onclick="patientTab('appointments',document.querySelector('#patient-sidebar .sb-item:nth-child(4)'))">
+              <div class="sc-icon" style="background:#e6f5f3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a7c72" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <div class="sc-num">3</div><div class="sc-lbl">Upcoming Appts</div>
+              <div class="sc-src">⚡ Azure SQL · appointments</div>
+            </div>
+            <div class="stat-card">
+              <div class="sc-icon" style="background:#edf5ef"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a7c59" stroke-width="2" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+              <div class="sc-num" id="hrDisplay">72<span style="font-size:14px;color:var(--grey-400)">bpm</span></div><div class="sc-lbl">Heart Rate</div>
+              <div class="sc-src">⚡ Azure SQL · health_metrics</div>
+            </div>
+            <div class="stat-card" onclick="patientTab('reports',document.querySelector('#patient-sidebar .sb-item:nth-child(5)'))">
+              <div class="sc-icon" style="background:#e8f2fd"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div>
+              <div class="sc-num">7</div><div class="sc-lbl">Medical Reports</div>
+              <div class="sc-src">⚡ Azure Blob Storage</div>
+            </div>
+            <div class="stat-card">
+              <div class="sc-icon" style="background:#fef8e8"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
+              <div class="sc-num">18<span style="font-size:14px;color:var(--grey-400)"> Jan</span></div><div class="sc-lbl">Last Visit</div>
+              <div class="sc-src">⚡ Azure SQL · appointments</div>
+            </div>
+          </div>
+
+          <!-- SYMPTOM CHECKER BANNER -->
+          <div class="symptom-checker">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:13px;font-weight:700;margin-bottom:4px">🤖 AI Symptom Checker</div>
+                <div style="font-size:12px;opacity:.8">Select your symptoms for a quick assessment</div>
+              </div>
+              <span style="font-size:10px;background:rgba(255,255,255,.2);padding:3px 8px;border-radius:100px;font-weight:700">Azure AI · Powered</span>
+            </div>
+            <div class="sc-chips" id="symptomChips">
+              <div class="sc-chip" onclick="toggleSymptom(this,'Headache')">Headache</div>
+              <div class="sc-chip" onclick="toggleSymptom(this,'Fatigue')">Fatigue</div>
+              <div class="sc-chip" onclick="toggleSymptom(this,'Chest Pain')">Chest Pain</div>
+              <div class="sc-chip" onclick="toggleSymptom(this,'Nausea')">Nausea</div>
+              <div class="sc-chip" onclick="toggleSymptom(this,'Shortness of Breath')">Shortness of Breath</div>
+              <div class="sc-chip" onclick="toggleSymptom(this,'Dizziness')">Dizziness</div>
+              <div class="sc-chip" onclick="toggleSymptom(this,'Fever')">Fever</div>
+              <div class="sc-chip" onclick="toggleSymptom(this,'Joint Pain')">Joint Pain</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3)" onclick="analyseSymptoms()">Analyse Symptoms →</button>
+              <button class="btn btn-sm" style="background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2)" onclick="clearSymptoms()">Clear</button>
+            </div>
+            <div class="sc-result" id="symptomResult" style="display:none"></div>
+          </div>
+
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header"><div><div class="card-title">Upcoming Appointments</div><div class="card-sub">Azure SQL · appointments table</div></div><button class="btn btn-outline btn-sm" onclick="patientTab('appointments',document.querySelector('#patient-sidebar .sb-item:nth-child(4)'))">View all</button></div>
+              <div class="appt-row">
+                <div class="appt-av" style="background:linear-gradient(135deg,#0a7c72,#0d6b61)">M</div>
+                <div><div class="appt-name">Dr. Michael O'Brien</div><div class="appt-spec">General Practitioner</div><div class="appt-meta"><div class="appt-mi"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Mon 3 Mar</div><div class="appt-mi">10:30 AM</div><div class="appt-mi">📹 Video</div></div></div>
+                <span class="pill pill-teal">Upcoming</span>
+                <div class="appt-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Rescheduling...','t-teal')">Reschedule</button><button class="btn btn-ink btn-sm" onclick="showToast('✓ Joining video call via Azure ACS','t-green')">Join Call</button></div>
+              </div>
+              <div class="appt-row">
+                <div class="appt-av" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)">A</div>
+                <div><div class="appt-name">Dr. Anna Walsh</div><div class="appt-spec">Cardiologist</div><div class="appt-meta"><div class="appt-mi">Thu 6 Mar</div><div class="appt-mi">2:00 PM</div><div class="appt-mi">🏥 In-Person</div></div></div>
+                <span class="pill pill-teal">Upcoming</span>
+                <div class="appt-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Rescheduling...','t-teal')">Reschedule</button><button class="btn btn-ink btn-sm" onclick="showToast('Details loaded from Azure SQL','t-teal')">Details</button></div>
+              </div>
+              <div class="appt-row">
+                <div class="appt-av" style="background:linear-gradient(135deg,#dc2626,#b91c1c)">P</div>
+                <div><div class="appt-name">Dr. Patricia Nolan</div><div class="appt-spec">Pediatrician</div><div class="appt-meta"><div class="appt-mi">Fri 7 Mar</div><div class="appt-mi">11:00 AM</div><div class="appt-mi">📹 Video</div></div></div>
+                <span class="pill pill-teal">Upcoming</span>
+                <div class="appt-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Rescheduling...','t-teal')">Reschedule</button><button class="btn btn-ink btn-sm" onclick="showToast('✓ Joining video call via Azure ACS','t-green')">Join Call</button></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:18px">
+              <div class="card">
+                <div class="card-header"><div class="card-title">Health Metrics</div><div class="azure-badge">⚡ Azure SQL</div></div>
+                <div class="metric-grid">
+                  <div class="metric-item"><div class="metric-lbl">Blood Pressure</div><div><span class="metric-val">118</span><span class="metric-unit">/76</span></div><div class="metric-status">● Normal</div></div>
+                  <div class="metric-item"><div class="metric-lbl">Glucose</div><div><span class="metric-val">5.4</span><span class="metric-unit"> mmol</span></div><div class="metric-status">● Normal</div></div>
+                  <div class="metric-item"><div class="metric-lbl">O₂ Sat.</div><div><span class="metric-val">98</span><span class="metric-unit">%</span></div><div class="metric-status">● Normal</div></div>
+                  <div class="metric-item" style="border:1px solid #fde68a;background:var(--amber-l)"><div class="metric-lbl">Cholesterol</div><div><span class="metric-val">5.9</span><span class="metric-unit"> mmol</span></div><div class="metric-status" style="color:var(--amber)">● Monitor</div></div>
+                </div>
+                <!-- HEALTH CHART -->
+                <div style="margin-top:14px">
+                  <div style="font-size:11px;font-weight:700;color:var(--grey-400);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Heart Rate — Last 7 Days</div>
+                  <div class="chart-bar-wrap" id="hrChart"></div>
+                  <div class="chart-labels" id="hrLabels"></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><div class="card-title">My Doctors</div></div>
+                <div class="doctor-item"><div class="appt-av" style="background:linear-gradient(135deg,#0a7c72,#0d6b61);width:34px;height:34px;font-size:14px">M</div><div><div class="di-name">Dr. M. O'Brien</div><div class="di-spec">General Practice</div></div><div class="di-avail"><div class="avail-dot dot-green"></div><span style="color:var(--green);font-size:11px;font-weight:600">Today</span></div></div>
+                <div class="doctor-item"><div class="appt-av" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);width:34px;height:34px;font-size:14px">A</div><div><div class="di-name">Dr. A. Walsh</div><div class="di-spec">Cardiology</div></div><div class="di-avail"><div class="avail-dot dot-amber"></div><span style="color:var(--amber);font-size:11px;font-weight:600">Thu</span></div></div>
+                <div class="doctor-item"><div class="appt-av" style="background:linear-gradient(135deg,#dc2626,#b91c1c);width:34px;height:34px;font-size:14px">P</div><div><div class="di-name">Dr. P. Nolan</div><div class="di-spec">Pediatrics</div></div><div class="di-avail"><div class="avail-dot dot-amber"></div><span style="color:var(--amber);font-size:11px;font-weight:600">Fri</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PATIENT: SYMPTOM CHECKER TAB -->
+        <div id="pt-symptom" style="display:none">
+          <div class="two-col">
+            <div>
+              <div class="symptom-checker" style="margin-bottom:16px">
+                <div style="font-size:15px;font-weight:700;margin-bottom:4px">🤖 AI Symptom Assessment</div>
+                <div style="font-size:12px;opacity:.8;margin-bottom:14px">Powered by Azure AI · Not a substitute for medical advice</div>
+                <div class="form-group" style="margin-bottom:10px">
+                  <label class="form-label" style="color:rgba(255,255,255,.7)">How long have you had these symptoms?</label>
+                  <select class="form-input" id="symptomDuration" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">
+                    <option>Less than 24 hours</option>
+                    <option>1–3 days</option>
+                    <option selected>4–7 days</option>
+                    <option>More than a week</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:14px">
+                  <label class="form-label" style="color:rgba(255,255,255,.7)">Severity (1–10)</label>
+                  <input type="range" min="1" max="10" value="5" id="symptomSeverity" style="width:100%;accent-color:#fff">
+                  <div style="display:flex;justify-content:space-between;font-size:10px;opacity:.6;margin-top:3px"><span>Mild</span><span>Severe</span></div>
+                </div>
+                <div class="sc-chips" id="symptomChips2">
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Headache')">Headache</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Fatigue')">Fatigue</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Chest Pain')">Chest Pain</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Nausea')">Nausea</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Shortness of Breath')">Shortness of Breath</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Dizziness')">Dizziness</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Fever')">Fever</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Joint Pain')">Joint Pain</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Cough')">Cough</div>
+                  <div class="sc-chip" onclick="toggleSymptom2(this,'Sore Throat')">Sore Throat</div>
+                </div>
+                <button class="btn btn-sm btn-full" style="background:rgba(255,255,255,.25);color:#fff;border:1px solid rgba(255,255,255,.4)" onclick="fullSymptomAnalysis()">Run Full Assessment →</button>
+              </div>
+              <div class="card" id="symptomFullResult" style="display:none">
+                <div class="card-header"><div class="card-title">Assessment Result</div><div class="azure-badge">⚡ Azure AI</div></div>
+                <div id="symptomResultContent"></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div class="card">
+                <div class="card-header"><div class="card-title">Previous Assessments</div><div class="card-sub">Azure SQL · symptom_logs</div></div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="padding:12px;background:var(--off);border-radius:10px;border:1px solid var(--grey-100)"><div style="font-size:12px;font-weight:700;color:var(--ink)">Headache + Fatigue</div><div style="font-size:11px;color:var(--grey-400);margin:3px 0">Assessed 15 Jan 2026</div><span class="pill pill-amber">Moderate</span></div>
+                  <div style="padding:12px;background:var(--off);border-radius:10px;border:1px solid var(--grey-100)"><div style="font-size:12px;font-weight:700;color:var(--ink)">Chest Pain + Shortness of Breath</div><div style="font-size:11px;color:var(--grey-400);margin:3px 0">Assessed 5 Dec 2025</div><span class="pill pill-red">Urgent</span></div>
+                  <div style="padding:12px;background:var(--off);border-radius:10px;border:1px solid var(--grey-100)"><div style="font-size:12px;font-weight:700;color:var(--ink)">Sore Throat + Fever</div><div style="font-size:11px;color:var(--grey-400);margin:3px 0">Assessed 10 Nov 2025</div><span class="pill pill-green">Mild</span></div>
+                </div>
+              </div>
+              <div class="card">
+                <div style="background:var(--red-l);border:1px solid #f5c6c6;border-radius:10px;padding:14px">
+                  <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:6px">⚠️ Emergency?</div>
+                  <div style="font-size:12px;color:var(--grey-600);line-height:1.6;margin-bottom:12px">If you are experiencing a medical emergency, do not use this tool — call 999 immediately.</div>
+                  <a href="tel:999"><button class="btn btn-sm btn-full" style="background:var(--red);color:#fff;border:none">📞 Call 999</button></a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PATIENT: BOOK TAB -->
+        <div id="pt-book" style="display:none">
+          <div class="step-indicator">
+            <div class="step-item"><div class="step-num active" id="s1">1</div><span class="step-lbl active">Doctor</span><div class="step-line" id="sl1"></div></div>
+            <div class="step-item"><div class="step-num pending" id="s2">2</div><span class="step-lbl pending" id="sl2t">Date & Time</span><div class="step-line" id="sl2"></div></div>
+            <div class="step-item"><div class="step-num pending" id="s3">3</div><span class="step-lbl pending" id="sl3t">Details</span><div class="step-line" id="sl3"></div></div>
+            <div class="step-item"><div class="step-num pending" id="s4">✓</div><span class="step-lbl pending" id="sl4t">Confirm</span></div>
+          </div>
+          <div class="booking-shell">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div class="card">
+                <div class="card-header"><div class="card-title">Select Doctor</div><div class="card-sub">GET /api/doctors</div></div>
+                <div class="doc-select-grid">
+                  <div class="doc-pick-card selected" onclick="pickDoc(this,'Dr. M. O\'Brien','General Practitioner',65)"><div class="dpc-name">Dr. M. O'Brien</div><div class="dpc-spec">General Practice</div><span class="pill pill-green">Today</span></div>
+                  <div class="doc-pick-card" onclick="pickDoc(this,'Dr. A. Walsh','Cardiologist',90)"><div class="dpc-name">Dr. A. Walsh</div><div class="dpc-spec">Cardiology</div><span class="pill pill-amber">Thu</span></div>
+                  <div class="doc-pick-card" onclick="pickDoc(this,'Dr. P. Nolan','Pediatrician',55)"><div class="dpc-name">Dr. P. Nolan</div><div class="dpc-spec">Pediatrics</div><span class="pill pill-amber">Fri</span></div>
+                  <div class="doc-pick-card" onclick="pickDoc(this,'Dr. J. Connell','Neurologist',110)"><div class="dpc-name">Dr. J. Connell</div><div class="dpc-spec">Neurology</div><span class="pill pill-green">Wed</span></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><div class="card-title">Notes</div></div>
+                <textarea class="form-input" id="bookNotes" rows="3" placeholder="Describe your symptoms...">Recurring headaches for 2 weeks.</textarea>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Date & Time</div><div class="card-sub">GET /api/doctors/slots</div></div>
+              <div class="date-strip">
+                <div class="date-chip" onclick="pickDate(this,'Mon 3')"><div class="dc-day">Mon</div><div class="dc-num">3</div></div>
+                <div class="date-chip active" onclick="pickDate(this,'Tue 4')"><div class="dc-day">Tue</div><div class="dc-num">4</div></div>
+                <div class="date-chip" onclick="pickDate(this,'Wed 5')"><div class="dc-day">Wed</div><div class="dc-num">5</div></div>
+                <div class="date-chip" onclick="pickDate(this,'Thu 6')"><div class="dc-day">Thu</div><div class="dc-num">6</div></div>
+                <div class="date-chip" onclick="pickDate(this,'Fri 7')"><div class="dc-day">Fri</div><div class="dc-num">7</div></div>
+                <div class="date-chip" onclick="pickDate(this,'Mon 10')"><div class="dc-day">Mon</div><div class="dc-num">10</div></div>
+              </div>
+              <div class="form-group" style="margin-bottom:14px">
+                <label class="form-label">Consultation Type</label>
+                <select class="form-input" id="bookType" onchange="updateSummary()"><option>Video Call (Azure ACS)</option><option>In-Person Visit</option></select>
+              </div>
+              <label class="form-label">Available Time Slots</label>
+              <div class="time-grid">
+                <div class="time-chip booked">9:00 AM</div>
+                <div class="time-chip" onclick="pickTime(this,'9:30 AM')">9:30 AM</div>
+                <div class="time-chip active" onclick="pickTime(this,'10:30 AM')">10:30 AM</div>
+                <div class="time-chip" onclick="pickTime(this,'11:00 AM')">11:00 AM</div>
+                <div class="time-chip" onclick="pickTime(this,'11:30 AM')">11:30 AM</div>
+                <div class="time-chip booked">12:00 PM</div>
+                <div class="time-chip" onclick="pickTime(this,'2:00 PM')">2:00 PM</div>
+                <div class="time-chip" onclick="pickTime(this,'2:30 PM')">2:30 PM</div>
+                <div class="time-chip" onclick="pickTime(this,'3:30 PM')">3:30 PM</div>
+              </div>
+            </div>
+            <div>
+              <div class="booking-summary" id="bookingSummary">
+                <div class="bs-title">Booking Summary</div>
+                <div class="bs-row"><span class="bs-label">Doctor</span><span class="bs-val" id="sumDoc">Dr. M. O'Brien</span></div>
+                <div class="bs-row"><span class="bs-label">Specialty</span><span class="bs-val" id="sumSpec">General Practice</span></div>
+                <div class="bs-row"><span class="bs-label">Date</span><span class="bs-val" id="sumDate">Tue, 4 Mar 2026</span></div>
+                <div class="bs-row"><span class="bs-label">Time</span><span class="bs-val" id="sumTime">10:30 AM</span></div>
+                <div class="bs-row"><span class="bs-label">Type</span><span class="bs-val" id="sumType">Video Call</span></div>
+                <div class="bs-row" style="margin-top:8px"><span class="bs-label" style="font-size:15px;color:rgba(255,255,255,.7)">Fee</span><span class="bs-total" id="sumFee">€65</span></div>
+                <div class="azure-strip">⚡ <strong>Azure Services:</strong><br>POST /api/appointments → Azure SQL<br>Email → Azure Communication Services<br>Video Room → Azure ACS Group Call</div>
+                <button class="btn btn-teal btn-full" onclick="confirmBooking()" id="confirmBookBtn">Confirm Appointment</button>
+              </div>
+              <div class="success-card" id="successCard">
+                <div class="success-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"><polyline points="20,6 9,17 4,12"/></svg></div>
+                <h3 style="font-family:'Fraunces',serif;font-size:20px;margin-bottom:6px">Appointment Booked!</h3>
+                <p style="font-size:13px;color:var(--grey-400);margin-bottom:16px">Confirmation saved to Azure SQL. Email sent via Azure Communication Services.</p>
+                <button class="btn btn-ink btn-full" onclick="patientTab('appointments',document.querySelector('#patient-sidebar .sb-item:nth-child(4)'))">View My Appointments</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PATIENT: APPOINTMENTS TAB -->
+        <div id="pt-appointments" style="display:none">
+          <div class="search-bar" style="margin-bottom:16px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search appointments..." oninput="searchAppts(this.value)">
+          </div>
+          <div class="card" style="margin-bottom:18px">
+            <div class="card-header"><div><div class="card-title">All Appointments</div><div class="card-sub">GET /api/appointments?patientId=SC-10482 · Azure SQL</div></div><button class="btn btn-teal btn-sm" onclick="patientTab('book',document.querySelector('#patient-sidebar .sb-item:nth-child(3)'))">+ New</button></div>
+            <table class="data-table" id="apptTable">
+              <thead><tr><th>Doctor</th><th>Date</th><th>Time</th><th>Type</th><th>Status</th><th>Fee</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><div style="font-weight:700">Dr. M. O'Brien</div><div style="font-size:11px;color:var(--grey-400)">General Practice</div></td><td>Mon 3 Mar 2026</td><td>10:30 AM</td><td><span class="pill pill-blue">Video Call</span></td><td><span class="pill pill-teal">Upcoming</span></td><td style="font-weight:700">€65</td><td><button class="btn btn-ink btn-sm" onclick="showToast('✓ Joining call via Azure ACS','t-green')">Join Call</button></td></tr>
+                <tr><td><div style="font-weight:700">Dr. A. Walsh</div><div style="font-size:11px;color:var(--grey-400)">Cardiology</div></td><td>Thu 6 Mar 2026</td><td>2:00 PM</td><td><span class="pill pill-grey">In-Person</span></td><td><span class="pill pill-teal">Upcoming</span></td><td style="font-weight:700">€90</td><td><button class="btn btn-outline btn-sm" onclick="showToast('Details loaded · Azure SQL','t-teal')">Details</button></td></tr>
+                <tr><td><div style="font-weight:700">Dr. P. Nolan</div><div style="font-size:11px;color:var(--grey-400)">Pediatrics</div></td><td>Fri 7 Mar 2026</td><td>11:00 AM</td><td><span class="pill pill-blue">Video Call</span></td><td><span class="pill pill-teal">Upcoming</span></td><td style="font-weight:700">€55</td><td><button class="btn btn-ink btn-sm" onclick="showToast('✓ Joining call via Azure ACS','t-green')">Join Call</button></td></tr>
+                <tr style="opacity:.5"><td><div style="font-weight:700">Dr. M. O'Brien</div></td><td>18 Jan 2026</td><td>9:30 AM</td><td><span class="pill pill-blue">Video Call</span></td><td><span class="pill pill-green">Completed</span></td><td>€65</td><td><button class="btn btn-outline btn-sm" onclick="showToast('Report loaded · Azure Blob','t-teal')">Report</button></td></tr>
+                <tr style="opacity:.5"><td><div style="font-weight:700">Dr. A. Walsh</div></td><td>5 Dec 2025</td><td>2:00 PM</td><td><span class="pill pill-grey">In-Person</span></td><td><span class="pill pill-red">Cancelled</span></td><td>—</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- PATIENT: REPORTS TAB -->
+        <div id="pt-reports" style="display:none">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Medical Reports (7)</div><div class="card-sub">Azure Blob Storage · patient-reports/SC-10482/</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div class="appt-row"><div style="width:36px;height:36px;background:var(--grey-100);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div><div><div class="appt-name">Blood_Test_Jan2026.pdf</div><div class="appt-spec">1.2 MB · 18 Jan 2026 · Dr. O'Brien</div></div><span class="pill pill-green">Uploaded</span><button class="btn btn-outline btn-sm" onclick="showToast('SAS URL generated · Azure Key Vault','t-teal')">↓ Download</button></div>
+                <div class="appt-row"><div style="width:36px;height:36px;background:var(--grey-100);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div><div><div class="appt-name">Chest_Xray_Dec2025.pdf</div><div class="appt-spec">3.8 MB · 12 Dec 2025 · Dr. Walsh</div></div><span class="pill pill-green">Uploaded</span><button class="btn btn-outline btn-sm" onclick="showToast('SAS URL generated · Azure Key Vault','t-teal')">↓ Download</button></div>
+                <div class="appt-row"><div style="width:36px;height:36px;background:var(--grey-100);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div><div><div class="appt-name">ECG_Report_Nov2025.pdf</div><div class="appt-spec">0.9 MB · 5 Nov 2025 · Dr. Walsh</div></div><span class="pill pill-green">Uploaded</span><button class="btn btn-outline btn-sm" onclick="showToast('SAS URL generated · Azure Key Vault','t-teal')">↓ Download</button></div>
+              </div>
+              <button class="btn btn-outline btn-full" style="margin-top:12px" onclick="showToast('✓ Report uploaded to Azure Blob Storage','t-green')">+ Upload New Report</button>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Storage Info</div><div class="card-sub">Azure Blob Storage</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;padding:9px;background:var(--off);border-radius:9px;font-size:12px"><span style="color:var(--grey-500)">Container</span><span style="font-family:monospace;font-weight:600;color:var(--azure)">patient-reports</span></div>
+                <div style="display:flex;justify-content:space-between;padding:9px;background:var(--off);border-radius:9px;font-size:12px"><span style="color:var(--grey-500)">Region</span><span style="font-weight:600">West Europe (Ireland)</span></div>
+                <div style="display:flex;justify-content:space-between;padding:9px;background:var(--off);border-radius:9px;font-size:12px"><span style="color:var(--grey-500)">Encryption</span><span class="pill pill-green">AES-256</span></div>
+                <div style="display:flex;justify-content:space-between;padding:9px;background:var(--off);border-radius:9px;font-size:12px"><span style="color:var(--grey-500)">GDPR</span><span class="pill pill-green">Compliant</span></div>
+                <div style="display:flex;justify-content:space-between;padding:9px;background:var(--off);border-radius:9px;font-size:12px"><span style="color:var(--grey-500)">Access</span><span style="font-weight:600;font-size:11px">SAS Token · 1hr</span></div>
+              </div>
+              <div style="margin-top:14px">
+                <div style="font-size:11px;font-weight:700;color:var(--grey-400);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Storage Used</div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span>6.4 MB of 1 GB</span><span style="font-weight:600;color:var(--teal)">0.6%</span></div>
+                <div class="uptime-bar"><div class="uptime-fill" style="width:0.6%" id="storageFill"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PATIENT: PROFILE TAB -->
+        <div id="pt-profile" style="display:none">
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Personal Information</div><div class="card-sub">PUT /api/patients/me · Azure SQL</div></div>
+              <div class="form-row"><div class="form-group" style="margin:0"><label class="form-label">First Name</label><input class="form-input" value="Sarah"></div><div class="form-group" style="margin:0"><label class="form-label">Last Name</label><input class="form-input" value="Murphy"></div></div>
+              <div style="height:12px"></div>
+              <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" value="sarah.murphy@gmail.com"></div>
+              <div class="form-row"><div class="form-group" style="margin:0"><label class="form-label">Date of Birth</label><input class="form-input" type="date" value="1990-03-15"></div><div class="form-group" style="margin:0"><label class="form-label">Blood Type</label><select class="form-input"><option selected>A+</option><option>O+</option><option>B+</option><option>AB+</option></select></div></div>
+              <div class="form-group"><label class="form-label">Address</label><input class="form-input" value="14 Oak Street, Dublin 4"></div>
+              <div class="form-group"><label class="form-label">Allergies</label><input class="form-input" value="Penicillin, Pollen"></div>
+              <button class="btn btn-ink btn-full" onclick="showToast('✓ Profile saved to Azure SQL','t-green')">Save Changes</button>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div class="card">
+                <div class="card-header"><div class="card-title">Account Security</div><div class="card-sub">Azure AD B2C</div></div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;justify-content:space-between;padding:10px;background:var(--off);border-radius:9px;font-size:13px"><span>Azure AD B2C</span><span class="pill pill-green">Connected</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:10px;background:var(--off);border-radius:9px;font-size:13px"><span>Two-Factor Auth</span><span class="pill pill-green">Enabled</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:10px;background:var(--off);border-radius:9px;font-size:13px"><span>GDPR Consent</span><span class="pill pill-green">Granted</span></div>
+                  <div style="display:flex;justify-content:space-between;padding:10px;background:var(--off);border-radius:9px;font-size:13px"><span>Premium Plan</span><span class="pill pill-blue">Active</span></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><div class="card-title">Statistics</div></div>
+                <div class="quick-stats" style="grid-template-columns:1fr 1fr 1fr">
+                  <div class="qs-item"><div class="qs-num">12</div><div class="qs-lbl">Total Visits</div></div>
+                  <div class="qs-item"><div class="qs-num">3</div><div class="qs-lbl">Doctors</div></div>
+                  <div class="qs-item"><div class="qs-num">7</div><div class="qs-lbl">Reports</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DOCTOR DASHBOARD -->
+<div class="page" id="page-doctor">
+  <div class="shell">
+    <div class="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M19 9h-4V5a2 2 0 00-4 0v4H7a2 2 0 000 4h4v4a2 2 0 004 0v-4h4a2 2 0 000-4z"/></svg></div>
+        <span class="sb-logo-name">SmartCare</span>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Doctor Panel</div>
+        <button class="sb-item active" onclick="doctorTab('overview',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Overview</span></button>
+        <button class="sb-item" onclick="doctorTab('schedule',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>My Schedule</span><span class="sb-badge">5</span></button>
+        <button class="sb-item" onclick="doctorTab('patients',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>My Patients</span></button>
+        <button class="sb-item" onclick="doctorTab('availability',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg><span>Availability</span></button>
+      </div>
+      <div class="sb-user">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="sb-user-av" style="background:linear-gradient(135deg,#0a7c72,#0d6b61)">M</div>
+          <div><div class="sb-user-name">Dr. M. O'Brien</div><div class="sb-user-role">General Practitioner</div></div>
+        </div>
+        <button class="sb-logout" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+    <div class="main-area">
+      <div class="topbar">
+        <span class="topbar-title" id="doctor-topbar-title">Doctor Overview</span>
+        <div class="topbar-right">
+          <span class="pill pill-green">● On Duty</span>
+          <button class="dark-toggle" onclick="toggleDark()"></button>
+          <button class="btn btn-outline btn-sm" onclick="showToast('Availability updated · Azure SQL','t-teal')">Set Unavailable</button>
+        </div>
+      </div>
+      <div class="content">
+        <div id="dr-overview">
+          <div class="quick-stats" style="margin-bottom:20px">
+            <div class="qs-item"><div class="qs-num" style="color:var(--teal)">5</div><div class="qs-lbl">Today's Appointments</div><div style="font-size:10px;color:var(--azure);margin-top:4px;font-weight:600">⚡ Azure SQL</div></div>
+            <div class="qs-item"><div class="qs-num">28</div><div class="qs-lbl">Total Patients</div><div style="font-size:10px;color:var(--azure);margin-top:4px;font-weight:600">⚡ Azure SQL</div></div>
+            <div class="qs-item"><div class="qs-num" style="color:var(--green)">12</div><div class="qs-lbl">This Week</div><div style="font-size:10px;color:var(--azure);margin-top:4px;font-weight:600">⚡ Azure SQL</div></div>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Today's Schedule — Mon 3 Mar</div><div class="card-sub">GET /api/doctor/appointments?date=today</div></div>
+              <div class="patient-card"><div class="pc-time">9:30 AM</div><div class="pc-line"></div><div class="appt-av" style="background:linear-gradient(135deg,#0a7c72,#0d6b61);width:34px;height:34px;font-size:14px">S</div><div><div class="pc-name">Sarah Murphy</div><div class="pc-reason">Headaches · Video Call</div></div><span class="pill pill-teal">Upcoming</span><div class="pc-actions"><button class="btn btn-ink btn-sm" onclick="showToast('✓ Video call started · Azure ACS','t-green')">Start Call</button></div></div>
+              <div class="patient-card"><div class="pc-time">11:00 AM</div><div class="pc-line"></div><div class="appt-av" style="background:linear-gradient(135deg,#b45309,#92400e);width:34px;height:34px;font-size:14px">J</div><div><div class="pc-name">James Foley</div><div class="pc-reason">Annual checkup · In-Person</div></div><span class="pill pill-teal">Upcoming</span><div class="pc-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Patient file loaded · Azure SQL','t-teal')">View File</button></div></div>
+              <div class="patient-card"><div class="pc-time">2:00 PM</div><div class="pc-line"></div><div class="appt-av" style="background:linear-gradient(135deg,#dc2626,#b91c1c);width:34px;height:34px;font-size:14px">A</div><div><div class="pc-name">Aoife Burke</div><div class="pc-reason">Follow-up · Video Call</div></div><span class="pill pill-teal">Upcoming</span><div class="pc-actions"><button class="btn btn-ink btn-sm" onclick="showToast('✓ Video call started · Azure ACS','t-green')">Start Call</button></div></div>
+              <div class="patient-card" style="opacity:.5"><div class="pc-time">3:30 PM</div><div class="pc-line"></div><div class="appt-av" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);width:34px;height:34px;font-size:14px">C</div><div><div class="pc-name">Ciara Daly</div><div class="pc-reason">Blood results · In-Person</div></div><span class="pill pill-green">Completed</span><div class="pc-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Notes uploaded · Azure SQL','t-teal')">Notes</button></div></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div class="card">
+                <div class="card-header"><div class="card-title">Recent Patients</div><div class="card-sub">GET /api/doctor/patients</div></div>
+                <table class="data-table" style="font-size:12px">
+                  <thead><tr><th>Patient</th><th>Last Visit</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <tr onclick="showToast('Patient record loaded · Azure SQL','t-teal')"><td><div style="font-weight:700">Sarah Murphy</div></td><td>3 Mar 2026</td><td><span class="pill pill-teal">Active</span></td></tr>
+                    <tr onclick="showToast('Patient record loaded · Azure SQL','t-teal')"><td><div style="font-weight:700">James Foley</div></td><td>28 Feb 2026</td><td><span class="pill pill-teal">Active</span></td></tr>
+                    <tr onclick="showToast('Patient record loaded · Azure SQL','t-teal')"><td><div style="font-weight:700">Aoife Burke</div></td><td>25 Feb 2026</td><td><span class="pill pill-teal">Active</span></td></tr>
+                    <tr onclick="showToast('Patient record loaded · Azure SQL','t-teal')"><td><div style="font-weight:700">Ciara Daly</div></td><td>3 Mar 2026</td><td><span class="pill pill-green">Completed</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="card">
+                <div class="card-header"><div class="card-title">Pending Reminders</div><div class="card-sub">Azure Communication Services</div></div>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="padding:10px;background:var(--amber-l);border-radius:9px;border:1px solid #fde68a"><div style="font-size:12px;font-weight:700;color:var(--amber)">📧 Reminder Due</div><div style="font-size:11px;color:var(--grey-600);margin-top:2px">Sarah Murphy — appointment tomorrow 10:30 AM</div><button class="btn btn-sm" style="margin-top:6px;background:var(--amber);color:white;border:none" onclick="showToast('✓ Reminder email sent · Azure Communication Services','t-green')">Send Now</button></div>
+                  <div style="padding:10px;background:var(--off);border-radius:9px;border:1px solid var(--grey-200)"><div style="font-size:12px;font-weight:700;color:var(--grey-600)">📧 Scheduled</div><div style="font-size:11px;color:var(--grey-500);margin-top:2px">James Foley — 24hr reminder · Auto-send 10:00 AM</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="dr-schedule" style="display:none">
+          <div class="schedule-row">
+            <div class="day-slot active today" onclick="pickDay(this)"><div class="ds-name">Mon</div><div class="ds-num">3</div><div class="ds-count">5 appts</div></div>
+            <div class="day-slot" onclick="pickDay(this)"><div class="ds-name">Tue</div><div class="ds-num">4</div><div class="ds-count">3 appts</div></div>
+            <div class="day-slot" onclick="pickDay(this)"><div class="ds-name">Wed</div><div class="ds-num">5</div><div class="ds-count">4 appts</div></div>
+            <div class="day-slot" onclick="pickDay(this)"><div class="ds-name">Thu</div><div class="ds-num">6</div><div class="ds-count">2 appts</div></div>
+            <div class="day-slot" onclick="pickDay(this)"><div class="ds-name">Fri</div><div class="ds-num">7</div><div class="ds-count">6 appts</div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Monday 3 March 2026</div><div class="card-sub">GET /api/doctor/schedule?date=2026-03-03 · Azure SQL</div></div>
+            <div class="patient-card"><div class="pc-time">9:30</div><div class="pc-line"></div><div class="appt-av" style="background:linear-gradient(135deg,#0a7c72,#0d6b61);width:36px;height:36px;font-size:15px">S</div><div><div class="pc-name">Sarah Murphy</div><div class="pc-reason">Recurring headaches · Video Call · SC-10482</div></div><span class="pill pill-teal">Upcoming</span><div class="pc-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Record loaded · Azure SQL','t-teal')">Record</button><button class="btn btn-ink btn-sm" onclick="showToast('✓ ACS call started','t-green')">Call</button></div></div>
+            <div class="patient-card"><div class="pc-time">11:00</div><div class="pc-line"></div><div class="appt-av" style="background:linear-gradient(135deg,#b45309,#92400e);width:36px;height:36px;font-size:15px">J</div><div><div class="pc-name">James Foley</div><div class="pc-reason">Annual checkup · In-Person · SC-10520</div></div><span class="pill pill-teal">Upcoming</span><div class="pc-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Record loaded · Azure SQL','t-teal')">Record</button><button class="btn btn-outline btn-sm" onclick="showToast('Notes saved · Azure SQL','t-teal')">Notes</button></div></div>
+            <div class="patient-card"><div class="pc-time">14:00</div><div class="pc-line"></div><div class="appt-av" style="background:linear-gradient(135deg,#dc2626,#b91c1c);width:36px;height:36px;font-size:15px">A</div><div><div class="pc-name">Aoife Burke</div><div class="pc-reason">Follow-up blood test · Video Call · SC-10641</div></div><span class="pill pill-teal">Upcoming</span><div class="pc-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Record loaded','t-teal')">Record</button><button class="btn btn-ink btn-sm" onclick="showToast('✓ ACS call started','t-green')">Call</button></div></div>
+            <div class="patient-card" style="opacity:.6"><div class="pc-time">15:30</div><div class="pc-line"></div><div class="appt-av" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);width:36px;height:36px;font-size:15px">C</div><div><div class="pc-name">Ciara Daly</div><div class="pc-reason">Blood results review · In-Person · SC-10209</div></div><span class="pill pill-green">Done</span><div class="pc-actions"><button class="btn btn-outline btn-sm" onclick="showToast('Notes loaded · Azure SQL','t-teal')">Notes</button></div></div>
+          </div>
+        </div>
+        <div id="dr-availability" style="display:none">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Set My Availability</div><div class="card-sub">PATCH /api/doctor/availability · Azure SQL</div></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Working Hours — Start</label><input class="form-input" type="time" value="09:00"></div>
+              <div class="form-group"><label class="form-label">Working Hours — End</label><input class="form-input" type="time" value="17:00"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Consultation Duration</label><select class="form-input"><option>30 minutes</option><option selected>45 minutes</option><option>60 minutes</option></select></div>
+            <div class="form-group"><label class="form-label">Days Available</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                <div style="padding:8px 14px;border-radius:8px;background:var(--ink);color:white;font-size:12px;font-weight:600;cursor:pointer" onclick="toggleDay(this)">Mon</div>
+                <div style="padding:8px 14px;border-radius:8px;background:var(--ink);color:white;font-size:12px;font-weight:600;cursor:pointer" onclick="toggleDay(this)">Tue</div>
+                <div style="padding:8px 14px;border-radius:8px;background:var(--ink);color:white;font-size:12px;font-weight:600;cursor:pointer" onclick="toggleDay(this)">Wed</div>
+                <div style="padding:8px 14px;border-radius:8px;background:var(--ink);color:white;font-size:12px;font-weight:600;cursor:pointer" onclick="toggleDay(this)">Thu</div>
+                <div style="padding:8px 14px;border-radius:8px;background:var(--grey-100);color:var(--grey-400);font-size:12px;font-weight:600;cursor:pointer" onclick="toggleDay(this)">Fri</div>
+                <div style="padding:8px 14px;border-radius:8px;background:var(--grey-100);color:var(--grey-400);font-size:12px;font-weight:600;cursor:pointer" onclick="toggleDay(this)">Sat</div>
+              </div>
+            </div>
+            <div class="form-group"><label class="form-label">Max Patients Per Day</label><input class="form-input" type="number" value="8"></div>
+            <div style="background:var(--azure-l);border:1px solid #bfdbfe;border-radius:9px;padding:10px 13px;font-size:12px;color:var(--azure);margin-bottom:14px">⚡ PATCH /api/doctor/availability → Azure SQL · availability table · Triggers slot recalculation</div>
+            <button class="btn btn-ink" onclick="showToast('✓ Availability saved to Azure SQL','t-green')">Save Availability</button>
+          </div>
+        </div>
+        <div id="dr-patients" style="display:none">
+          <div class="search-bar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search patients...">
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">My Patients (28)</div><div class="card-sub">GET /api/doctor/patients · Azure SQL</div></div>
+            <table class="data-table">
+              <thead><tr><th>Patient</th><th>Patient ID</th><th>Last Visit</th><th>Condition</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr onclick="showToast('Full patient record loaded · Azure SQL','t-teal')"><td><div style="font-weight:700">Sarah Murphy</div></td><td style="font-family:monospace;font-size:11px">SC-10482</td><td>3 Mar 2026</td><td>Hypertension</td><td><span class="pill pill-teal">Active</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                <tr onclick="showToast('Full patient record loaded · Azure SQL','t-teal')"><td><div style="font-weight:700">James Foley</div></td><td style="font-family:monospace;font-size:11px">SC-10520</td><td>28 Feb 2026</td><td>Diabetes Type 2</td><td><span class="pill pill-teal">Active</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                <tr onclick="showToast('Full patient record loaded · Azure SQL','t-teal')"><td><div style="font-weight:700">Aoife Burke</div></td><td style="font-family:monospace;font-size:11px">SC-10641</td><td>25 Feb 2026</td><td>Anaemia</td><td><span class="pill pill-teal">Active</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+                <tr onclick="showToast('Full patient record loaded · Azure SQL','t-teal')"><td><div style="font-weight:700">Ciara Daly</div></td><td style="font-family:monospace;font-size:11px">SC-10209</td><td>3 Mar 2026</td><td>Annual Review</td><td><span class="pill pill-green">Discharged</span></td><td><button class="btn btn-outline btn-sm">View</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<div class="page" id="page-admin">
+  <div class="shell">
+    <div class="sidebar">
+      <div class="sb-logo">
+        <div class="sb-logo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round"><path d="M19 9h-4V5a2 2 0 00-4 0v4H7a2 2 0 000 4h4v4a2 2 0 004 0v-4h4a2 2 0 000-4z"/></svg></div>
+        <span class="sb-logo-name">SmartCare</span>
+      </div>
+      <div class="sb-section">
+        <div class="sb-label">Admin Panel</div>
+        <button class="sb-item active" onclick="adminTab('overview',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Overview</span></button>
+        <button class="sb-item" onclick="adminTab('users',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Users</span></button>
+        <button class="sb-item" onclick="adminTab('appointments',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>Appointments</span></button>
+        <button class="sb-item" onclick="adminTab('azure',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>Azure Services</span></button>
+        <button class="sb-item" onclick="adminTab('activity',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg><span>Activity Log</span></button>
+      </div>
+      <div class="sb-user">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="sb-user-av" style="background:linear-gradient(135deg,#1a2e2a,#0a7c72)">A</div>
+          <div><div class="sb-user-name">Admin User</div><div class="sb-user-role">System Administrator</div></div>
+        </div>
+        <button class="sb-logout" onclick="logout()">Sign Out</button>
+      </div>
+    </div>
+    <div class="main-area">
+      <div class="topbar">
+        <span class="topbar-title" id="admin-topbar-title">System Overview</span>
+        <div class="topbar-right">
+          <span class="pill pill-green">● All Systems Operational</span>
+          <button class="dark-toggle" onclick="toggleDark()"></button>
+        </div>
+      </div>
+      <div class="content">
+        <div id="ad-overview">
+          <div class="admin-stats">
+            <div class="stat-card"><div class="sc-icon" style="background:#e6f5f3"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0a7c72" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div><div class="sc-num">142</div><div class="sc-lbl">Total Patients</div><div class="sc-src">⚡ Azure SQL</div></div>
+            <div class="stat-card"><div class="sc-icon" style="background:#edf5ef"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4a7c59" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M9 7h6M12 4v6"/></svg></div><div class="sc-num">12</div><div class="sc-lbl">Active Doctors</div><div class="sc-src">⚡ Azure SQL</div></div>
+            <div class="stat-card"><div class="sc-icon" style="background:#e8f2fd"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0066cc" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="sc-num">38</div><div class="sc-lbl">Appts Today</div><div class="sc-src">⚡ Azure SQL</div></div>
+            <div class="stat-card"><div class="sc-icon" style="background:#fef8e8"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="sc-num" style="color:var(--green)">99.8%</div><div class="sc-lbl">Azure Uptime</div><div class="sc-src">⚡ App Service</div></div>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <div class="card-header"><div class="card-title">Recent Appointments</div><div class="card-sub">GET /api/admin/appointments · Azure SQL</div></div>
+              <table class="data-table">
+                <thead><tr><th>Patient</th><th>Doctor</th><th>Date</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>Sarah Murphy</td><td>Dr. O'Brien</td><td>3 Mar</td><td><span class="pill pill-teal">Upcoming</span></td></tr>
+                  <tr><td>James Foley</td><td>Dr. O'Brien</td><td>3 Mar</td><td><span class="pill pill-teal">Upcoming</span></td></tr>
+                  <tr><td>Ciara Daly</td><td>Dr. O'Brien</td><td>3 Mar</td><td><span class="pill pill-green">Completed</span></td></tr>
+                  <tr><td>Patrick Ryan</td><td>Dr. Walsh</td><td>6 Mar</td><td><span class="pill pill-teal">Upcoming</span></td></tr>
+                  <tr><td>Niamh Byrne</td><td>Dr. Nolan</td><td>7 Mar</td><td><span class="pill pill-red">Cancelled</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title">Azure Services Status</div></div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--off);border-radius:9px"><div><div style="font-size:13px;font-weight:600">Azure SQL Database</div><div style="font-size:11px;color:var(--grey-400)">SmartCareDB · West Europe</div><div class="uptime-bar" style="margin-top:5px;width:120px"><div class="uptime-fill" style="width:99.8%"></div></div></div><span class="pill pill-green">Online</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--off);border-radius:9px"><div><div style="font-size:13px;font-weight:600">App Service</div><div style="font-size:11px;color:var(--grey-400)">smartcare.azurewebsites.net</div></div><span class="pill pill-green">Running</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--off);border-radius:9px"><div><div style="font-size:13px;font-weight:600">Blob Storage</div><div style="font-size:11px;color:var(--grey-400)">patient-reports container</div></div><span class="pill pill-green">Active</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--off);border-radius:9px"><div><div style="font-size:13px;font-weight:600">Azure AD B2C</div><div style="font-size:11px;color:var(--grey-400)">SmartCareB2C tenant</div></div><span class="pill pill-green">Active</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--off);border-radius:9px"><div><div style="font-size:13px;font-weight:600">Azure CDN</div><div style="font-size:11px;color:var(--grey-400)">Global edge network · 47 PoPs</div></div><span class="pill pill-green">Active</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="ad-users" style="display:none">
+          <div class="search-bar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search users...">
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">User Management</div><div class="card-sub">GET /api/admin/users · Azure SQL + Azure AD B2C</div></div>
+            <table class="data-table">
+              <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>
+                <tr><td><div style="font-weight:700">Sarah Murphy</div></td><td><span class="pill pill-blue">Patient</span></td><td>sarah.murphy@gmail.com</td><td><span class="pill pill-green">Active</span></td><td><button class="btn btn-outline btn-sm" onclick="showToast('User record loaded · Azure SQL','t-teal')">Edit</button></td></tr>
+                <tr><td><div style="font-weight:700">Dr. M. O'Brien</div></td><td><span class="pill pill-teal">Doctor</span></td><td>m.obrien@smartcare.ie</td><td><span class="pill pill-green">Active</span></td><td><button class="btn btn-outline btn-sm" onclick="showToast('User record loaded · Azure SQL','t-teal')">Edit</button></td></tr>
+                <tr><td><div style="font-weight:700">Dr. A. Walsh</div></td><td><span class="pill pill-teal">Doctor</span></td><td>a.walsh@smartcare.ie</td><td><span class="pill pill-green">Active</span></td><td><button class="btn btn-outline btn-sm" onclick="showToast('User record loaded · Azure SQL','t-teal')">Edit</button></td></tr>
+                <tr><td><div style="font-weight:700">Admin User</div></td><td><span class="pill pill-grey">Admin</span></td><td>admin@smartcare.ie</td><td><span class="pill pill-green">Active</span></td><td><button class="btn btn-outline btn-sm" onclick="showToast('Admin record · Azure AD B2C','t-teal')">Edit</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="ad-appointments" style="display:none">
+          <div class="card">
+            <div class="card-header"><div class="card-title">All Appointments</div><div class="card-sub">GET /api/admin/appointments · Azure SQL</div></div>
+            <table class="data-table">
+              <thead><tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Type</th><th>Status</th><th>Fee</th></tr></thead>
+              <tbody>
+                <tr><td style="font-family:monospace;font-size:11px">APT-1001</td><td>Sarah Murphy</td><td>Dr. O'Brien</td><td>Mon 3 Mar</td><td><span class="pill pill-blue">Video</span></td><td><span class="pill pill-teal">Upcoming</span></td><td>€65</td></tr>
+                <tr><td style="font-family:monospace;font-size:11px">APT-1002</td><td>Sarah Murphy</td><td>Dr. Walsh</td><td>Thu 6 Mar</td><td><span class="pill pill-grey">In-Person</span></td><td><span class="pill pill-teal">Upcoming</span></td><td>€90</td></tr>
+                <tr><td style="font-family:monospace;font-size:11px">APT-1003</td><td>James Foley</td><td>Dr. O'Brien</td><td>Mon 3 Mar</td><td><span class="pill pill-grey">In-Person</span></td><td><span class="pill pill-teal">Upcoming</span></td><td>€65</td></tr>
+                <tr><td style="font-family:monospace;font-size:11px">APT-0998</td><td>Ciara Daly</td><td>Dr. O'Brien</td><td>Mon 3 Mar</td><td><span class="pill pill-grey">In-Person</span></td><td><span class="pill pill-green">Completed</span></td><td>€65</td></tr>
+                <tr><td style="font-family:monospace;font-size:11px">APT-0997</td><td>Niamh Byrne</td><td>Dr. Nolan</td><td>Fri 7 Mar</td><td><span class="pill pill-blue">Video</span></td><td><span class="pill pill-red">Cancelled</span></td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div id="ad-azure" style="display:none">
+          <div class="three-col" style="margin-bottom:18px">
+            <div class="card-sm"><div style="font-size:11px;font-weight:700;color:var(--azure);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Azure SQL Database</div><div style="font-size:12px;color:var(--grey-600);line-height:1.7">Server: smartcare-sqlserver<br>DB: SmartCareDB<br>Region: West Europe<br>Tier: Basic (S0)<br>Tables: 6 · Records: 285</div><button class="btn btn-outline btn-sm btn-full" style="margin-top:10px" onclick="showToast('Azure SQL ping: 12ms ✓','t-green')">Ping DB</button></div>
+            <div class="card-sm"><div style="font-size:11px;font-weight:700;color:var(--azure);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">App Service</div><div style="font-size:12px;color:var(--grey-600);line-height:1.7">URL: smartcare.azurewebsites.net<br>Runtime: .NET v4.0<br>Plan: Basic B1<br>Region: East US 2<br>Status: Running</div><button class="btn btn-outline btn-sm btn-full" style="margin-top:10px" onclick="showToast('App Service health: OK · 99.8% uptime ✓','t-green')">Health Check</button></div>
+            <div class="card-sm"><div style="font-size:11px;font-weight:700;color:var(--azure);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Blob Storage</div><div style="font-size:12px;color:var(--grey-600);line-height:1.7">Account: smartcarestorage<br>Container: patient-reports<br>Files: 7 · Size: 6.4 MB<br>Encryption: AES-256<br>GDPR: Compliant</div><button class="btn btn-outline btn-sm btn-full" style="margin-top:10px" onclick="showToast('Blob Storage: 7 files · 6.4MB used ✓','t-green')">Check Storage</button></div>
+          </div>
+          <div class="three-col">
+            <div class="card-sm"><div style="font-size:11px;font-weight:700;color:var(--azure);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Azure AD B2C</div><div style="font-size:12px;color:var(--grey-600);line-height:1.7">Tenant: SmartCareB2C<br>Roles: Patient/Doctor/Admin<br>Users: 158 registered<br>MFA: Enabled<br>JWT: 1hr expiry</div><button class="btn btn-outline btn-sm btn-full" style="margin-top:10px" onclick="showToast('Azure AD B2C: 158 users active ✓','t-green')">Check Auth</button></div>
+            <div class="card-sm"><div style="font-size:11px;font-weight:700;color:var(--azure);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Azure CDN</div><div style="font-size:12px;color:var(--grey-600);line-height:1.7">Profile: SmartCareCDN<br>Endpoint: smartcare.azureedge.net<br>Origin: App Service<br>Cache: 7 days static<br>PoPs: 47 globally</div><button class="btn btn-outline btn-sm btn-full" style="margin-top:10px" onclick="showToast('CDN: 47 PoPs active · Cache hit 94% ✓','t-green')">Purge Cache</button></div>
+            <div class="card-sm"><div style="font-size:11px;font-weight:700;color:var(--azure);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Key Vault</div><div style="font-size:12px;color:var(--grey-600);line-height:1.7">Vault: smartcare-vault<br>Secrets: 8 stored<br>DB connection string ✓<br>Storage key ✓<br>ACS key ✓</div><button class="btn btn-outline btn-sm btn-full" style="margin-top:10px" onclick="showToast('Key Vault: all secrets healthy ✓','t-green')">Check Vault</button></div>
+          </div>
+        </div>
+        <!-- NEW: ACTIVITY LOG TAB -->
+        <div id="ad-activity" style="display:none">
+          <div class="card">
+            <div class="card-header"><div class="card-title">System Activity Log</div><div class="card-sub"><span class="live-dot"></span>Live · Azure Application Insights · GET /api/admin/logs</div></div>
+            <div id="activityFeed">
+              <div class="activity-item"><div class="activity-dot" style="background:var(--teal)"></div><div><div style="font-size:13px;font-weight:600">Sarah Murphy logged in</div><div style="font-size:11px;color:var(--grey-400)">Azure AD B2C · Patient role · IP 195.x.x.x</div><div style="font-size:10px;color:var(--grey-300);margin-top:2px">Just now</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="background:var(--green)"></div><div><div style="font-size:13px;font-weight:600">Appointment APT-1001 created</div><div style="font-size:11px;color:var(--grey-400)">POST /api/appointments · Azure SQL insert</div><div style="font-size:10px;color:var(--grey-300);margin-top:2px">2 mins ago</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="background:var(--azure)"></div><div><div style="font-size:13px;font-weight:600">Blood_Test_Jan2026.pdf uploaded</div><div style="font-size:11px;color:var(--grey-400)">Azure Blob Storage · patient-reports/SC-10482/</div><div style="font-size:10px;color:var(--grey-300);margin-top:2px">8 mins ago</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="background:var(--amber)"></div><div><div style="font-size:13px;font-weight:600">Email reminder sent</div><div style="font-size:11px;color:var(--grey-400)">Azure Communication Services · To: sarah.murphy@gmail.com</div><div style="font-size:10px;color:var(--grey-300);margin-top:2px">15 mins ago</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="background:var(--red)"></div><div><div style="font-size:13px;font-weight:600">APT-0997 cancelled by patient</div><div style="font-size:11px;color:var(--grey-400)">PATCH /api/appointments/0997 · Azure SQL update</div><div style="font-size:10px;color:var(--grey-300);margin-top:2px">1 hour ago</div></div></div>
+              <div class="activity-item"><div class="activity-dot" style="background:var(--green)"></div><div><div style="font-size:13px;font-weight:600">Dr. O'Brien set availability</div><div style="font-size:11px;color:var(--grey-400)">PATCH /api/doctor/availability · Mon-Thu 9am-5pm</div><div style="font-size:10px;color:var(--grey-300);margin-top:2px">2 hours ago</div></div></div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="addActivityLog()">+ Simulate New Event</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let currentRole='patient';
+let bkDoc="Dr. M. O'Brien", bkSpec='General Practitioner', bkFee=65;
+let bkDate='Tue 4 Mar', bkTime='10:30 AM';
+let selectedSymptoms=[], selectedSymptoms2=[];
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ── DARK MODE ──
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  localStorage.setItem('sc-dark', document.body.classList.contains('dark'));
+}
+if(localStorage.getItem('sc-dark')==='true') document.body.classList.add('dark');
+
+// ── TOAST ──
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg;t.className=`toast show ${type}`;
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ── NOTIFICATIONS ──
+function openNotif(){
+  document.getElementById('notifPanel').classList.add('open');
+  document.getElementById('notifOverlay').classList.add('open');
+}
+function closeNotif(){
+  document.getElementById('notifPanel').classList.remove('open');
+  document.getElementById('notifOverlay').classList.remove('open');
+}
+
+// ── HEALTH CHART ──
+function buildChart(){
+  const data=[68,74,71,80,72,69,72];
+  const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const max=Math.max(...data);
+  const chart=document.getElementById('hrChart');
+  const labels=document.getElementById('hrLabels');
+  if(!chart)return;
+  chart.innerHTML='';labels.innerHTML='';
+  data.forEach((v,i)=>{
+    const bar=document.createElement('div');
+    bar.className='chart-bar';
+    bar.setAttribute('data-val',v+'bpm');
+    bar.style.cssText=`height:0;background:${i===6?'#0a7c72':'#b3e0db'};transition:height .6s cubic-bezier(.4,0,.2,1) ${i*0.06}s`;
+    chart.appendChild(bar);
+    const lbl=document.createElement('div');
+    lbl.className='chart-label';lbl.textContent=days[i];
+    labels.appendChild(lbl);
+    setTimeout(()=>bar.style.height=((v/max)*100)+'%',100);
+  });
+}
+
+// ── LIVE HEART RATE ──
+function liveHR(){
+  const el=document.getElementById('hrDisplay');
+  if(!el)return;
+  const base=72, variation=Math.floor(Math.random()*6)-3;
+  const val=base+variation;
+  el.innerHTML=`${val}<span style="font-size:14px;color:var(--grey-400)">bpm</span>`;
+}
+setInterval(liveHR,4000);
+
+// ── SYMPTOM CHECKER ──
+function toggleSymptom(el,name){
+  el.classList.toggle('active');
+  if(selectedSymptoms.includes(name)) selectedSymptoms=selectedSymptoms.filter(s=>s!==name);
+  else selectedSymptoms.push(name);
+}
+function toggleSymptom2(el,name){
+  el.classList.toggle('active');
+  if(selectedSymptoms2.includes(name)) selectedSymptoms2=selectedSymptoms2.filter(s=>s!==name);
+  else selectedSymptoms2.push(name);
+}
+function clearSymptoms(){
+  document.querySelectorAll('#symptomChips .sc-chip').forEach(c=>c.classList.remove('active'));
+  selectedSymptoms=[];
+  document.getElementById('symptomResult').style.display='none';
+}
+function analyseSymptoms(){
+  const r=document.getElementById('symptomResult');
+  if(selectedSymptoms.length===0){showToast('Please select at least one symptom','t-red');return;}
+  const urgent=['Chest Pain','Shortness of Breath'];
+  const isUrgent=selectedSymptoms.some(s=>urgent.includes(s));
+  r.style.display='block';
+  r.innerHTML=isUrgent
+    ? '⚠️ <strong>Urgent:</strong> Symptoms may indicate a cardiac event. Please seek immediate medical attention or book an urgent appointment.'
+    : `✓ <strong>Assessment:</strong> Based on ${selectedSymptoms.join(', ')}, this may require a GP consultation. Consider booking an appointment for evaluation.`;
+  if(isUrgent) showToast('⚠️ Urgent symptoms detected — seek care immediately','t-red');
+  else showToast('✓ Symptom assessment complete · Logged to Azure SQL','t-teal');
+}
+async function fullSymptomAnalysis(){
+  if(selectedSymptoms2.length===0){showToast('Please select at least one symptom','t-red');return;}
+  const severity=document.getElementById('symptomSeverity').value;
+  const duration=document.getElementById('symptomDuration').value;
+  const r=document.getElementById('symptomFullResult');
+  const rc=document.getElementById('symptomResultContent');
+  r.style.display='block';
+  rc.innerHTML='<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--grey-400)"><div style="width:14px;height:14px;border:2px solid var(--teal);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite"></div> Analysing with Azure AI...</div>';
+  await delay(1400);
+  const urgent=['Chest Pain','Shortness of Breath'];
+  const isUrgent=selectedSymptoms2.some(s=>urgent.includes(s));
+  const level=parseInt(severity)>7?'High':parseInt(severity)>4?'Moderate':'Mild';
+  const color=isUrgent||level==='High'?'var(--red)':level==='Moderate'?'var(--amber)':'var(--green)';
+  rc.innerHTML=`
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
+      <div style="padding:8px 16px;border-radius:100px;background:${color}1a;border:1px solid ${color}40;font-size:13px;font-weight:700;color:${color}">${isUrgent?'Urgent':level} Risk</div>
+      <span style="font-size:12px;color:var(--grey-400)">Severity: ${severity}/10 · Duration: ${duration}</span>
+    </div>
+    <div style="font-size:13px;color:var(--grey-600);line-height:1.7;margin-bottom:14px">
+      <strong>Symptoms analysed:</strong> ${selectedSymptoms2.join(', ')}<br>
+      ${isUrgent?'⚠️ Your symptoms suggest a potential urgent condition. Please seek immediate medical attention or call 999.':'Based on your reported symptoms and duration, a GP consultation is recommended within '+( duration.includes('24')?'24 hours':'3–5 days')+'.'}
+    </div>
+    <button class="btn btn-teal btn-sm" onclick="patientTab('book',document.querySelector('#patient-sidebar .sb-item:nth-child(3)'))">Book Appointment →</button>`;
+  showToast('✓ Full assessment complete · Logged to Azure SQL + App Insights','t-teal');
+}
+
+// ── LOGIN ──
+function selectRole(el,role){
+  currentRole=role;
+  document.querySelectorAll('.role-opt').forEach(r=>r.classList.remove('active'));
+  el.classList.add('active');
+}
+function demoLogin(role){
+  currentRole=role;
+  document.querySelectorAll('.role-opt').forEach((r,i)=>{
+    r.classList.remove('active');
+    if(['patient','doctor','admin'][i]===role)r.classList.add('active');
+  });
+  handleLogin();
+}
+async function handleLogin(){
+  const btn=document.getElementById('loginBtn');
+  btn.disabled=true;btn.innerHTML='<div style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></div> Authenticating...';
+  await delay(800);
+  btn.disabled=false;btn.textContent='Sign In with Azure AD →';
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById(`page-${currentRole}`).classList.add('active');
+  showToast(`✓ Signed in as ${currentRole} via Azure AD B2C`,'t-teal');
+  if(currentRole==='patient') setTimeout(buildChart,300);
+  setTimeout(()=>{document.getElementById('storageFill')&&(document.getElementById('storageFill').style.width='0.6%')},400);
+}
+function logout(){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-login').classList.add('active');
+  showToast('Signed out from Azure AD B2C');
+}
+
+// ── PATIENT TABS ──
+function patientTab(tab,el){
+  ['dashboard','symptom','book','appointments','reports','profile'].forEach(t=>{
+    const e=document.getElementById(`pt-${t}`);
+    if(e)e.style.display='none';
+  });
+  const target=document.getElementById(`pt-${tab}`);
+  if(target)target.style.display='block';
+  document.querySelectorAll('#patient-sidebar .sb-item').forEach(i=>i.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const titles={dashboard:'Dashboard',symptom:'Symptom Checker',book:'Book Appointment',appointments:'My Appointments',reports:'Medical Reports',profile:'My Profile'};
+  document.getElementById('patient-topbar-title').textContent=titles[tab]||tab;
+  if(tab==='book'){document.getElementById('bookingSummary').style.display='block';document.getElementById('successCard').style.display='none';}
+  if(tab==='dashboard')setTimeout(buildChart,200);
+}
+
+// ── DOCTOR TABS ──
+function doctorTab(tab,el){
+  ['overview','schedule','patients','availability'].forEach(t=>{
+    const e=document.getElementById(`dr-${t}`);
+    if(e)e.style.display='none';
+  });
+  const target=document.getElementById(`dr-${tab}`);
+  if(target)target.style.display='block';
+  document.querySelectorAll('#page-doctor .sb-item').forEach(i=>i.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const titles={overview:'Doctor Overview',schedule:'My Schedule',patients:'My Patients',availability:'Set Availability'};
+  document.getElementById('doctor-topbar-title').textContent=titles[tab]||tab;
+}
+
+// ── ADMIN TABS ──
+function adminTab(tab,el){
+  ['overview','users','appointments','azure','activity'].forEach(t=>{
+    const e=document.getElementById(`ad-${t}`);
+    if(e)e.style.display='none';
+  });
+  const target=document.getElementById(`ad-${tab}`);
+  if(target)target.style.display='block';
+  document.querySelectorAll('#page-admin .sb-item').forEach(i=>i.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const titles={overview:'System Overview',users:'User Management',appointments:'All Appointments',azure:'Azure Services',activity:'Activity Log'};
+  document.getElementById('admin-topbar-title').textContent=titles[tab]||tab;
+}
+
+// ── BOOKING ──
+function pickDoc(el,name,spec,fee){
+  document.querySelectorAll('.doc-pick-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  bkDoc=name;bkSpec=spec;bkFee=fee;updateSummary();
+}
+function pickDate(el,date){
+  document.querySelectorAll('.date-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');bkDate=date+' Mar';updateSummary();
+}
+function pickTime(el,time){
+  document.querySelectorAll('.time-chip:not(.booked)').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');bkTime=time;updateSummary();
+}
+function updateSummary(){
+  document.getElementById('sumDoc').textContent=bkDoc;
+  document.getElementById('sumSpec').textContent=bkSpec;
+  document.getElementById('sumDate').textContent=bkDate+' 2026';
+  document.getElementById('sumTime').textContent=bkTime;
+  document.getElementById('sumFee').textContent='€'+bkFee;
+  const t=document.getElementById('bookType');
+  if(t)document.getElementById('sumType').textContent=t.value.includes('Video')?'Video Call':'In-Person';
+}
+async function confirmBooking(){
+  const btn=document.getElementById('confirmBookBtn');
+  btn.disabled=true;btn.innerHTML='<div style="width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block"></div> Saving...';
+  await delay(900);
+  btn.disabled=false;btn.textContent='Confirm Appointment';
+  document.getElementById('bookingSummary').style.display='none';
+  document.getElementById('successCard').classList.add('show');
+  showToast('✓ Appointment saved · Azure SQL · Email sent via ACS','t-green');
+}
+
+// ── SCHEDULE ──
+function pickDay(el){
+  document.querySelectorAll('.day-slot').forEach(d=>d.classList.remove('active'));
+  el.classList.add('active');
+  showToast('Schedule loaded · Azure SQL','t-teal');
+}
+
+// ── DAY TOGGLE ──
+function toggleDay(el){
+  const isOn=el.style.background.includes('var(--ink)')||el.style.background==='var(--ink)';
+  if(isOn){el.style.background='var(--grey-100)';el.style.color='var(--grey-400)';}
+  else{el.style.background='var(--ink)';el.style.color='white';}
+}
+
+// ── SEARCH ──
+function searchAppts(val){
+  const rows=document.querySelectorAll('#apptTable tbody tr');
+  rows.forEach(r=>r.style.display=r.textContent.toLowerCase().includes(val.toLowerCase())?'':'none');
+}
+
+// ── ACTIVITY LOG ──
+const events=['Patient record viewed · Azure SQL','CDN cache purged · 47 PoPs cleared','New user registered · Azure AD B2C','Report downloaded · SAS token generated','Video call initiated · Azure ACS','Availability updated · Azure SQL'];
+function addActivityLog(){
+  const feed=document.getElementById('activityFeed');
+  const colors=['var(--teal)','var(--green)','var(--azure)','var(--amber)'];
+  const ev=events[Math.floor(Math.random()*events.length)];
+  const col=colors[Math.floor(Math.random()*colors.length)];
+  const item=document.createElement('div');
+  item.className='activity-item';item.style.animation='countUp .3s ease';
+  item.innerHTML=`<div class="activity-dot" style="background:${col}"></div><div><div style="font-size:13px;font-weight:600">${ev}</div><div style="font-size:11px;color:var(--grey-400)">System event · Azure Application Insights</div><div style="font-size:10px;color:var(--grey-300);margin-top:2px">Just now</div></div>`;
+  feed.insertBefore(item,feed.firstChild);
+  showToast('✓ New event logged · Azure App Insights','t-teal');
+}
+</script>
+</body>
+</html>
