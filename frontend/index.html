@@ -818,7 +818,36 @@ textarea.form-input{resize:vertical;min-height:80px}
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
+async function loadDoctors() {
+  try {
+    const res = await fetch("https://smartcare-api.azurewebsites.net/api/doctors");
+    const doctors = await res.json();
+
+    console.log(doctors);
+
+    const table = document.querySelector("tbody");
+    table.innerHTML = "";
+
+    doctors.forEach(doc => {
+      const row = `
+        <tr>
+          <td>${doc.name}</td>
+          <td>${doc.specialty}</td>
+          <td>${doc.fee}</td>
+        </tr>
+      `;
+      table.innerHTML += row;
+    });
+
+  } catch (err) {
+    console.error("Error loading doctors:", err);
+  }
+}
+
+// run on page load
+loadDoctors();
+</script>
 // ── STATE ──
 let currentRole='patient';
 let bkDoc='Dr. M. O\'Brien', bkSpec='General Practice', bkFee=65;
