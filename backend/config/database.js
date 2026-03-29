@@ -1,110 +1,40 @@
 // DATABASE CONFIGURATION — SmartCare Healthcare System
-const sql = require('mssql');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
-const dbConfig = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  server: process.env.DB_SERVER,
-  database: process.env.DB_NAME,
-  port: parseInt(process.env.DB_PORT) || 1433,
-  options: {
-    encrypt: true,
-    trustServerCertificate: false,
-    enableArithAbort: true,
-    connectTimeout: 30000,
-    requestTimeout: 30000,
-  },
-  pool: {
-    max: 10,
-    min: 0,
-    idleTimeoutMillis: 30000,
-    acquireTimeoutMillis: 30000,
-    evictionRunIntervalMillis: 10000,
-  },
-};
-
-let pool = null;
-let connectionAttempts = 0;
-const MAX_RETRY_ATTEMPTS = 3;
+let isConnected = false;
 
 async function connectDB() {
   try {
     console.log('========================================');
-    console.log('🚀 Connecting to Azure SQL Database...');
-    console.log(`📡 Server: ${dbConfig.server}`);
-    console.log(`🗄️  Database: ${dbConfig.database}`);
-    console.log(`👤 User: ${dbConfig.user}`);
+    console.log('🚀 Connecting to Cosmos DB MongoDB...');
+    console.log(`📡 Server: ${process.env.DB_SERVER}`);
+    console.log(`🗄️  Database: ${process.env.DB_NAME}`);
+    console.log(`👤 User: ${process.env.DB_USER}`);
     console.log('========================================');
 
-    pool = await sql.connect(dbConfig);
+    const uri = `mongodb://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD)}@${process.env.DB_SERVER}:${process.env.DB_PORT}/${process.env.DB_NAME}?ssl=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000`;
 
-    console.log('✅ Connected to Azure SQL Database successfully!');
+    await mongoose.connect(uri);
 
-    connectionAttempts = 0;
-
-    const testResult = await pool
-      .request()
-      .query('SELECT GETUTCDATE() AS ServerTime');
-    console.log(`🕐 Server time: ${testResult.recordset[0].ServerTime}`);
+    isConnected = true;
+    console.log('✅ Connected to Cosmos DB MongoDB successfully!');
     console.log('========================================');
-
-    return pool;
+    return mongoose.connection;
   } catch (err) {
-    connectionAttempts++;
     console.error('❌ Database connection failed!');
-    console.error(`   Attempt: ${connectionAttempts} of ${MAX_RETRY_ATTEMPTS}`);
     console.error(`   Error: ${err.message}`);
-
-    if (connectionAttempts < MAX_RETRY_ATTEMPTS) {
-      console.log(`🔄 Retrying in 5 seconds...`);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      return connectDB();
-    }
-
-    throw new Error(
-      `Unable to connect to database after ${MAX_RETRY_ATTEMPTS} attempts: ${err.message}`
-    );
-  }
-}
-
-function getPool() {
-  if (!pool) {
-    throw new Error('Database not connected. Call connectDB() first.');
-  }
-  return pool;
-}
-
-function isConnected() {
-  return pool !== null && pool.connected;
-}
-
-async function closeDB() {
-  if (pool) {
-    try {
-      await pool.close();
-      console.log('📴 Database connection closed');
-      pool = null;
-    } catch (err) {
-      console.error('Error closing database connection:', err);
-    }
+    throw err;
   }
 }
 
 async function healthCheck() {
-  if (!pool) {
-    return {
-      status: 'disconnected',
-      message: 'Database connection pool not initialized',
-    };
-  }
   try {
-    const result = await pool
-      .request()
-      .query('SELECT GETUTCDATE() AS current_time, 1 AS test');
+    await mongoose.connection.db.admin().ping();
     return {
       status: 'healthy',
-      serverTime: result.recordset[0].current_time,
+      host: process.env.DB_SERVER,
+      database: process.env.DB_NAME,
       timestamp: new Date().toISOString(),
     };
   } catch (err) {
@@ -116,7 +46,21 @@ async function healthCheck() {
   }
 }
 
-// Graceful shutdown
+async function closeDB() {
+  if (isConnected) {
+    await mongoose.connection.close();
+    isConnected = false;
+    console.log('📴 Database connection closed');
+  }
+}
+
+function getDB() {
+  if (!isConnected) {
+    throw new Error('Database not connected. Call connectDB() first.');
+  }
+  return mongoose.connection;
+}
+
 process.on('SIGINT', async () => {
   console.log('\n🛑 SIGINT received. Closing DB...');
   await closeDB();
@@ -131,10 +75,8 @@ process.on('SIGTERM', async () => {
 
 module.exports = {
   connectDB,
-  getPool,
-  closeDB,
-  isConnected,
   healthCheck,
-  sql,
-  dbConfig,
+  closeDB,
+  getDB,
+  mongoose,
 };
