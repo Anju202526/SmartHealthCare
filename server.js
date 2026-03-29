@@ -54,6 +54,7 @@ app.use('/api/doctors',      doctorRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/medical',      medicalRoutes);
 app.use('/api/admin',        adminRoutes);
+app.use('/api/user',        adminUser);
 
 // 404
 app.use((req, res) => {
