@@ -1,41 +1,23 @@
-const { getPool, sql } = require('../config/database');
+const User = require('../models/User');
+const Appointment = require('../models/Appointment');
 
 // GET /api/admin/users
 async function getAllUsers(req, res) {
-  const pool = getPool();
   try {
-    const result = await pool.request().query(`
-      SELECT
-        u.user_id,
-        u.email,
-        u.role,
-        u.is_active,
-        u.last_login,
-        u.created_at,
-        COALESCE(p.first_name, d.first_name, 'Admin') AS first_name,
-        COALESCE(p.last_name,  d.last_name,  'User')  AS last_name,
-        CONCAT(
-          COALESCE(p.first_name, d.first_name, 'Admin'),
-          ' ',
-          COALESCE(p.last_name,  d.last_name,  'User')
-        ) AS name
-      FROM Users u
-      LEFT JOIN Patients p ON u.user_id = p.user_id
-      LEFT JOIN Doctors  d ON u.user_id = d.user_id
-      ORDER BY u.created_at DESC
-    `);
+    const users = await User.find()
+      .select('-password')
+      .sort({ created_at: -1 });
 
-    // Shape for frontend
-    const users = result.recordset.map((u) => ({
-      user_id: u.user_id,
-      name:    u.name.trim(),
-      email:   u.email,
-      role:    u.role,
-      status:  u.is_active ? 'Active' : 'Inactive',
+    const formatted = users.map(u => ({
+      user_id:    u._id,
+      name:       u.name,
+      email:      u.email,
+      role:       u.role,
+      status:     u.is_active ? 'Active' : 'Inactive',
       last_login: u.last_login,
     }));
 
-    res.json(users);
+    res.json(formatted);
   } catch (err) {
     console.error('getAllUsers error:', err);
     res.status(500).json({ error: 'Failed to load users', details: err.message });
@@ -46,18 +28,13 @@ async function getAllUsers(req, res) {
 async function updateUser(req, res) {
   const { id } = req.params;
   const { role, is_active } = req.body;
-  const pool = getPool();
 
   try {
-    const request = pool.request().input('user_id', sql.Int, id);
+    const updates = {};
+    if (role      !== undefined) updates.role      = role;
+    if (is_active !== undefined) updates.is_active = is_active;
 
-    let setParts = ['updated_at = GETUTCDATE()'];
-    if (role      !== undefined) { setParts.push('role = @role');           request.input('role',      sql.NVarChar, role); }
-    if (is_active !== undefined) { setParts.push('is_active = @is_active'); request.input('is_active', sql.Bit,      is_active); }
-
-    await request.query(
-      `UPDATE Users SET ${setParts.join(', ')} WHERE user_id = @user_id`
-    );
+    await User.findByIdAndUpdate(id, updates);
 
     res.json({ success: true, message: 'User updated' });
   } catch (err) {
@@ -69,16 +46,9 @@ async function updateUser(req, res) {
 // PATCH /api/admin/users/:id/deactivate
 async function deactivateUser(req, res) {
   const { id } = req.params;
-  const pool = getPool();
 
   try {
-    await pool
-      .request()
-      .input('user_id', sql.Int, id)
-      .query(
-        'UPDATE Users SET is_active = 0, updated_at = GETUTCDATE() WHERE user_id = @user_id'
-      );
-
+    await User.findByIdAndUpdate(id, { is_active: false });
     res.json({ success: true, message: 'User deactivated' });
   } catch (err) {
     console.error('deactivateUser error:', err);
@@ -86,35 +56,33 @@ async function deactivateUser(req, res) {
   }
 }
 
-// GET /api/admin/stats — dashboard summary numbers
+// GET /api/admin/stats
 async function getStats(req, res) {
-  const pool = getPool();
   try {
-    const [patients, doctors, todayAppts, weekAppts] = await Promise.all([
-      pool.request().query(
-        "SELECT COUNT(*) AS cnt FROM Users WHERE role = 'patient' AND is_active = 1"
-      ),
-      pool.request().query(
-        "SELECT COUNT(*) AS cnt FROM Users WHERE role = 'doctor'  AND is_active = 1"
-      ),
-      pool.request().query(
-        `SELECT COUNT(*) AS cnt FROM Appointments
-         WHERE appointment_date = CAST(GETUTCDATE() AS DATE)
-           AND status IN ('upcoming','confirmed')`
-      ),
-      pool.request().query(
-        `SELECT COUNT(*) AS cnt FROM Appointments
-         WHERE appointment_date >= CAST(DATEADD(DAY, -6, GETUTCDATE()) AS DATE)
-           AND status IN ('upcoming','confirmed','completed')`
-      ),
-    ]);
+    const today = new Date().toISOString().split('T')[0];
+    const weekAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
+      .toISOString().split('T')[0];
+
+    const [totalPatients, activeDoctors, apptsToday, apptsThisWeek] =
+      await Promise.all([
+        User.countDocuments({ role: 'patient', is_active: true }),
+        User.countDocuments({ role: 'doctor',  is_active: true }),
+        Appointment.countDocuments({
+          date:   today,
+          status: { $in: ['Upcoming', 'Confirmed'] },
+        }),
+        Appointment.countDocuments({
+          date:   { $gte: weekAgo },
+          status: { $in: ['Upcoming', 'Confirmed', 'Completed'] },
+        }),
+      ]);
 
     res.json({
-      totalPatients:  patients.recordset[0].cnt,
-      activeDoctors:  doctors.recordset[0].cnt,
-      apptsToday:     todayAppts.recordset[0].cnt,
-      apptsThisWeek:  weekAppts.recordset[0].cnt,
-      uptime:         '99.8%', // could pull from Azure Monitor in production
+      totalPatients,
+      activeDoctors,
+      apptsToday,
+      apptsThisWeek,
+      uptime: '99.8%',
     });
   } catch (err) {
     console.error('getStats error:', err);
