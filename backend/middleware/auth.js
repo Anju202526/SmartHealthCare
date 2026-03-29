@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { getPool, sql } = require('../config/database');
+const User = require('../models/User');
 
 async function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -12,19 +12,18 @@ async function authenticateToken(req, res, next) {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const pool = getPool();
-    const result = await pool
-      .request()
-      .input('userId', sql.Int, decoded.userId)
-      .query(
-        'SELECT user_id, email, role, is_active FROM Users WHERE user_id = @userId'
-      );
+    const user = await User.findById(decoded.userId).select('-password');
 
-    if (result.recordset.length === 0 || !result.recordset[0].is_active) {
+    if (!user || !user.is_active) {
       return res.status(401).json({ error: 'User not found or inactive' });
     }
 
-    req.user = result.recordset[0];
+    req.user = {
+      userId: user._id,
+      email:  user.email,
+      role:   user.role,
+    };
+
     next();
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
