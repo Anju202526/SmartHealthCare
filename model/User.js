@@ -15,6 +15,8 @@ const userSchema = new mongoose.Schema({
   is_active:  { type: Boolean, default: true },
   last_login: { type: Date,   default: null },
   created_at: { type: Date,   default: Date.now }
+  allergies:  { type: String, default: null },
+  blood_type: { type: String, default: null },
 });
 
 userSchema.pre('save', async function(next) {
