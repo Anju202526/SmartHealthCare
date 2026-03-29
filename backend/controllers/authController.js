@@ -1,40 +1,161 @@
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { getPool, sql } = require('../config/database');
-
-const hashPassword = async (password) => {
-  const salt = await bcrypt.genSalt(10);
-  return await bcrypt.hash(password, salt);
-};
-
-const comparePassword = async (password, hashedPassword) => {
-  return await bcrypt.compare(password, hashedPassword);
-};
+const User = require('../models/User');
 
 const generateToken = (userId, email, role) => {
-  return jwt.sign({ userId, email, role }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '30d',
-  });
+  return jwt.sign(
+    { userId, email, role },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
+  );
 };
 
 // ── REGISTER ──────────────────────────────────────────────
 async function register(req, res) {
-  const {
-    email,
-    password,
-    role,
-    first_name,
-    last_name,
-    phone,
-    dob,
-    gender,
-    address,
-  } = req.body;
-
-  const pool = getPool();
-  const transaction = pool.transaction();
+  const { email, password, role, first_name, last_name, phone, dob, gender, address, specialty, license_no } = req.body;
 
   try {
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ error: 'Email already registered' });
+    }
+
+    const user = new User({
+      name:      `${first_name} ${last_name}`.trim(),
+      email,
+      password,
+      role:      role || 'patient',
+      phone:     phone || null,
+      dob:       dob || null,
+      gender:    gender || null,
+      address:   address || null,
+      specialty: specialty || null,
+      license_no:license_no || null,
+      is_active: true,
+    });
+
+    await user.save();
+
+    const token = generateToken(user._id, user.email, user.role);
+
+    res.status(201).json({
+      success: true,
+      message: 'Registration successful',
+      token,
+      user: {
+        user_id:    user._id,
+        email:      user.email,
+        role:       user.role,
+        first_name,
+        last_name,
+      },
+    });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Registration failed', details: err.message });
+  }
+}
+
+// ── LOGIN ─────────────────────────────────────────────────
+async function login(req, res) {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    if (!user.is_active) {
+      return res.status(401).json({ error: 'Account is deactivated. Contact admin.' });
+    }
+
+    const isValid = await user.comparePassword(password);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    user.last_login = new Date();
+    await user.save();
+
+    const token = generateToken(user._id, user.email, user.role);
+
+    const nameParts = user.name ? user.name.split(' ') : ['', ''];
+
+    res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: {
+        user_id: user._id,
+        email:   user.email,
+        role:    user.role,
+        name:    user.name,
+        first_name: nameParts[0] || '',
+        last_name:  nameParts.slice(1).join(' ') || '',
+      },
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed', details: err.message });
+  }
+}
+
+// ── GET CURRENT USER ──────────────────────────────────────
+async function getCurrentUser(req, res) {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const nameParts = user.name ? user.name.split(' ') : ['', ''];
+
+    res.json({
+      user_id:    user._id,
+      email:      user.email,
+      role:       user.role,
+      name:       user.name,
+      first_name: nameParts[0] || '',
+      last_name:  nameParts.slice(1).join(' ') || '',
+      phone:      user.phone,
+      dob:        user.dob,
+      gender:     user.gender,
+      address:    user.address,
+      specialty:  user.specialty,
+      last_login: user.last_login,
+      is_active:  user.is_active,
+    });
+  } catch (err) {
+    console.error('Get user error:', err);
+    res.status(500).json({ error: 'Failed to get user profile' });
+  }
+}
+
+// ── CHANGE PASSWORD ───────────────────────────────────────
+async function changePassword(req, res) {
+  const { current_password, new_password } = req.body;
+
+  try {
+    const user = await User.findById(req.user.userId);
+
+    const isValid = await user.comparePassword(current_password);
+    if (!isValid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    user.password = new_password;
+    await user.save();
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+}
+
+module.exports = { register, login, getCurrentUser, changePassword };  try {
     await transaction.begin();
 
     const existingUser = await transaction
